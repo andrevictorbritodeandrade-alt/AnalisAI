@@ -87,24 +87,63 @@ async function startServer() {
   seedData("FLAMENGO", "BRASILEIRAO", flamengoData.BRASILEIRAO);
   seedData("FLAMENGO", "LIBERTADORES", flamengoData.LIBERTADORES);
 
-  // Seed other teams with at least one competition
-  seedData("PALMEIRAS", "BRASILEIRAO", {
-    campeonato: "🇧🇷 Campeonato Brasileiro 2026",
-    medias: { gols: "1.8", finalizacoes: "13.2", chutesGol: "5.1", grandesChances: "2.8", posse: "55%", escanteios: "5.9", faltas: "14.2" },
-    ataque: {
-      finalizacoesTotais: [ { nome: "Estêvão", pais: "🇧🇷", valor: "3.2" }, { nome: "Flaco López", pais: "🇦🇷", valor: "2.9" }, { nome: "Raphael Veiga", pais: "🇧🇷", valor: "2.5" } ],
-      chutesNoGol: [ { nome: "Flaco López", pais: "🇦🇷", valor: "1.4" }, { nome: "Estêvão", pais: "🇧🇷", valor: "1.3" }, { nome: "Raphael Veiga", pais: "🇧🇷", valor: "1.0" } ],
-      finalizacoesFora: [ { nome: "Raphael Veiga", pais: "🇧🇷", valor: "1.6" }, { nome: "Estêvão", pais: "🇧🇷", valor: "1.2" }, { nome: "Richard Ríos", pais: "🇨🇴", valor: "1.1" } ],
-      golsFora: [ { nome: "Raphael Veiga", pais: "🇧🇷", valor: "3" }, { nome: "Richard Ríos", pais: "🇨🇴", valor: "1" }, { nome: "Estêvão", pais: "🇧🇷", valor: "1" } ],
-      escanteiosCruzamentos: [ { nome: "Raphael Veiga", pais: "🇧🇷", valor: "2.8" }, { nome: "Estêvão", pais: "🇧🇷", valor: "1.4" }, { nome: "Piquerez", pais: "🇺🇾", valor: "1.2" } ],
-      rating: [ { nome: "Estêvão", pais: "🇧🇷", valor: "8.10" }, { nome: "Raphael Veiga", pais: "🇧🇷", valor: "7.90" }, { nome: "Aníbal Moreno", pais: "🇦🇷", valor: "7.75" } ]
+  const palmeirasData = {
+    "PAULISTA": {
+      "campeonato": "🏆 Campeonato Paulista 2026",
+      "medias": { "gols": "1.9", "finalizacoes": "14.2", "chutesGol": "5.5", "grandesChances": "3.1", "posse": "56%", "escanteios": "6.8", "faltas": "14.1" },
+      "ataque": {
+        "finalizacoesTotais": [ { "nome": "Flaco López", "pais": "🇦🇷", "valor": "3.5" }, { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "2.9" }, { "nome": "Estêvão", "pais": "🇧🇷", "valor": "2.5" } ],
+        "chutesNoGol": [ { "nome": "Flaco López", "pais": "🇦🇷", "valor": "1.8" }, { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "1.3" }, { "nome": "Estêvão", "pais": "🇧🇷", "valor": "1.1" } ],
+        "finalizacoesFora": [ { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "1.5" }, { "nome": "Richard Ríos", "pais": "🇨🇴", "valor": "1.2" }, { "nome": "Estêvão", "pais": "🇧🇷", "valor": "0.9" } ],
+        "golsFora": [ { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "2" }, { "nome": "Richard Ríos", "pais": "🇨🇴", "valor": "1" }, { "nome": "Gabriel Menino", "pais": "🇧🇷", "valor": "1" } ],
+        "escanteiosCruzamentos": [ { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "2.6" }, { "nome": "Piquerez", "pais": "🇺🇾", "valor": "1.7" }, { "nome": "Mayke", "pais": "🇧🇷", "valor": "1.2" } ],
+        "rating": [ { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "7.95" }, { "nome": "Gustavo Gómez", "pais": "🇵🇾", "valor": "7.70" }, { "nome": "Flaco López", "pais": "🇦🇷", "valor": "7.55" } ]
+      },
+      "defesa": {
+        "desarmes": [ { "nome": "Aníbal Moreno", "pais": "🇦🇷", "valor": "3.4" }, { "nome": "Piquerez", "pais": "🇺🇾", "valor": "2.2" }, { "nome": "Richard Ríos", "pais": "🇨🇴", "valor": "2.0" } ],
+        "interceptacoes": [ { "nome": "Gustavo Gómez", "pais": "🇵🇾", "valor": "1.9" }, { "nome": "Murilo", "pais": "🇧🇷", "valor": "1.6" }, { "nome": "Aníbal Moreno", "pais": "🇦🇷", "valor": "1.5" } ],
+        "cortes": [ { "nome": "Gustavo Gómez", "pais": "🇵🇾", "valor": "4.9" }, { "nome": "Murilo", "pais": "🇧🇷", "valor": "4.6" }, { "nome": "Aníbal Moreno", "pais": "🇦🇷", "valor": "2.1" } ]
+      }
     },
-    defesa: {
-      desarmes: [ { nome: "Aníbal Moreno", pais: "🇦🇷", valor: "3.5" }, { nome: "Marcos Rocha", pais: "🇧🇷", valor: "2.4" }, { nome: "Murilo", pais: "🇧🇷", valor: "2.0" } ],
-      interceptacoes: [ { nome: "Gustavo Gómez", pais: "🇵🇾", valor: "2.1" }, { nome: "Murilo", pais: "🇧🇷", valor: "1.7" }, { nome: "Aníbal Moreno", pais: "🇦🇷", valor: "1.4" } ],
-      cortes: [ { nome: "Gustavo Gómez", pais: "🇵🇾", valor: "5.2" }, { nome: "Murilo", pais: "🇧🇷", valor: "4.8" }, { nome: "Vitor Reis", pais: "🇧🇷", valor: "3.5" } ]
+    "BRASILEIRAO": {
+      "campeonato": "🇧🇷 Campeonato Brasileiro 2026",
+      "medias": { "gols": "1.6", "finalizacoes": "13.1", "chutesGol": "4.8", "grandesChances": "2.4", "posse": "53%", "escanteios": "6.1", "faltas": "15.0" },
+      "ataque": {
+        "finalizacoesTotais": [ { "nome": "Flaco López", "pais": "🇦🇷", "valor": "2.8" }, { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "2.5" }, { "nome": "Rony", "pais": "🇧🇷", "valor": "2.1" } ],
+        "chutesNoGol": [ { "nome": "Flaco López", "pais": "🇦🇷", "valor": "1.3" }, { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "1.1" }, { "nome": "Estêvão", "pais": "🇧🇷", "valor": "0.9" } ],
+        "finalizacoesFora": [ { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "1.3" }, { "nome": "Richard Ríos", "pais": "🇨🇴", "valor": "1.0" }, { "nome": "Gabriel Menino", "pais": "🇧🇷", "valor": "0.8" } ],
+        "golsFora": [ { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "1" }, { "nome": "Richard Ríos", "pais": "🇨🇴", "valor": "1" }, { "nome": "Aníbal Moreno", "pais": "🇦🇷", "valor": "1" } ],
+        "escanteiosCruzamentos": [ { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "2.2" }, { "nome": "Piquerez", "pais": "🇺🇾", "valor": "1.4" }, { "nome": "Estêvão", "pais": "🇧🇷", "valor": "1.0" } ],
+        "rating": [ { "nome": "Gustavo Gómez", "pais": "🇵🇾", "valor": "7.50" }, { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "7.40" }, { "nome": "Aníbal Moreno", "pais": "🇦🇷", "valor": "7.25" } ]
+      },
+      "defesa": {
+        "desarmes": [ { "nome": "Aníbal Moreno", "pais": "🇦🇷", "valor": "3.1" }, { "nome": "Piquerez", "pais": "🇺🇾", "valor": "2.0" }, { "nome": "Marcos Rocha", "pais": "🇧🇷", "valor": "1.8" } ],
+        "interceptacoes": [ { "nome": "Gustavo Gómez", "pais": "🇵🇾", "valor": "1.7" }, { "nome": "Murilo", "pais": "🇧🇷", "valor": "1.5" }, { "nome": "Aníbal Moreno", "pais": "🇦🇷", "valor": "1.3" } ],
+        "cortes": [ { "nome": "Gustavo Gómez", "pais": "🇵🇾", "valor": "5.2" }, { "nome": "Murilo", "pais": "🇧🇷", "valor": "4.8" }, { "nome": "Piquerez", "pais": "🇺🇾", "valor": "2.5" } ]
+      }
+    },
+    "LIBERTADORES": {
+      "campeonato": "🌎 Copa Libertadores 2026",
+      "medias": { "gols": "2.1", "finalizacoes": "14.5", "chutesGol": "5.8", "grandesChances": "3.5", "posse": "55%", "escanteios": "6.5", "faltas": "14.5" },
+      "ataque": {
+        "finalizacoesTotais": [ { "nome": "Flaco López", "pais": "🇦🇷", "valor": "3.2" }, { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "2.8" }, { "nome": "Rony", "pais": "🇧🇷", "valor": "2.4" } ],
+        "chutesNoGol": [ { "nome": "Flaco López", "pais": "🇦🇷", "valor": "1.6" }, { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "1.4" }, { "nome": "Rony", "pais": "🇧🇷", "valor": "1.1" } ],
+        "finalizacoesFora": [ { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "1.6" }, { "nome": "Richard Ríos", "pais": "🇨🇴", "valor": "1.3" }, { "nome": "Piquerez", "pais": "🇺🇾", "valor": "0.9" } ],
+        "golsFora": [ { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "2" }, { "nome": "Richard Ríos", "pais": "🇨🇴", "valor": "1" }, { "nome": "Piquerez", "pais": "🇺🇾", "valor": "1" } ],
+        "escanteiosCruzamentos": [ { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "2.8" }, { "nome": "Piquerez", "pais": "🇺🇾", "valor": "1.6" }, { "nome": "Mayke", "pais": "🇧🇷", "valor": "1.3" } ],
+        "rating": [ { "nome": "Raphael Veiga", "pais": "🇧🇷", "valor": "8.10" }, { "nome": "Gustavo Gómez", "pais": "🇵🇾", "valor": "7.90" }, { "nome": "Weverton", "pais": "🇧🇷", "valor": "7.60" } ]
+      },
+      "defesa": {
+        "desarmes": [ { "nome": "Aníbal Moreno", "pais": "🇦🇷", "valor": "3.6" }, { "nome": "Richard Ríos", "pais": "🇨🇴", "valor": "2.3" }, { "nome": "Piquerez", "pais": "🇺🇾", "valor": "2.1" } ],
+        "interceptacoes": [ { "nome": "Gustavo Gómez", "pais": "🇵🇾", "valor": "2.1" }, { "nome": "Murilo", "pais": "🇧🇷", "valor": "1.8" }, { "nome": "Aníbal Moreno", "pais": "🇦🇷", "valor": "1.6" } ],
+        "cortes": [ { "nome": "Gustavo Gómez", "pais": "🇵🇾", "valor": "5.8" }, { "nome": "Murilo", "pais": "🇧🇷", "valor": "5.1" }, { "nome": "Aníbal Moreno", "pais": "🇦🇷", "valor": "2.5" } ]
+      }
     }
-  });
+  };
+
+  seedData("PALMEIRAS", "PAULISTA", palmeirasData.PAULISTA);
+  seedData("PALMEIRAS", "BRASILEIRAO", palmeirasData.BRASILEIRAO);
+  seedData("PALMEIRAS", "LIBERTADORES", palmeirasData.LIBERTADORES);
 
   // API Routes
   app.get("/api/competitions/:teamId", (req, res) => {

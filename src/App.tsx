@@ -13,29 +13,59 @@ import {
   ChevronDown
 } from 'lucide-react';
 
+const CLUB_CRESTS: Record<string, string> = {
+  FLAMENGO: "https://share.google/Id1yLQSbXjzi9vl9L",
+};
+
+// Componente visual do "Selo de Aposta Recomendada"
+const SeloAposta = ({ texto }: { texto: string }) => (
+  <span className="ml-2 inline-flex items-center gap-1 bg-green-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse shadow-[0_0_8px_rgba(22,163,74,0.6)]">
+    🔥 {texto}
+  </span>
+);
+
 // Componente Auxiliar para renderizar as listas de Top 3
-function RankingBox({ titulo, dados, destaque = false, cor = "red" }: { titulo: string, dados: any[], destaque?: boolean, cor?: "red" | "neutral" }) {
+function RankingBox({ titulo, dados, destaque = false, cor = "red", tipo = "none" }: { titulo: string, dados: any[], destaque?: boolean, cor?: "red" | "neutral", tipo?: "chute" | "none" }) {
   const bgClass = cor === "red" ? "bg-black/30" : "bg-neutral-950/50";
   const titleColor = destaque ? "text-yellow-400" : (cor === "red" ? "text-red-300" : "text-neutral-300");
 
+  const calcularLinhaSegura = (valorMedio: string, tipo: string) => {
+    const numero = parseFloat(valorMedio);
+    let linhaCalculada = numero * 0.66; 
+    
+    if (tipo === 'chute') {
+      linhaCalculada = Math.floor(linhaCalculada) > 0 ? Math.floor(linhaCalculada) + 0.5 : 0.5;
+      return `Over ${linhaCalculada}`;
+    }
+    return null;
+  };
+
   return (
-    <div className={`${bgClass} rounded-lg p-3 border border-white/5 h-full transition-all hover:border-white/10`}>
+    <div className={`${bgClass} rounded-lg p-3 border border-white/5 h-full transition-colors hover:border-white/10 relative overflow-hidden`}>
       <h5 className={`${titleColor} font-semibold mb-3 text-sm flex items-center gap-2`}>
         {titulo}
       </h5>
       <ul className="space-y-2">
-        {dados.map((jog, index) => (
-          <li key={index} className="flex items-center justify-between text-sm group">
-            <div className="flex items-center gap-2 text-neutral-200">
-              <span className="text-base leading-none">{jog.pais}</span>
-              <span className="truncate max-w-[120px] font-medium group-hover:text-white transition-colors">{jog.nome}</span>
-            </div>
-            <div className="flex-grow border-b border-dotted border-neutral-600 mx-2 opacity-30 relative top-[4px]"></div>
-            <span className={`font-mono font-bold ${destaque ? 'text-yellow-400' : 'text-white'}`}>
-              {jog.valor}
-            </span>
-          </li>
-        ))}
+        {dados.map((jog, index) => {
+          const isHot = tipo === 'chute' && parseFloat(jog.valor) >= 1.5;
+          const linhaSegura = isHot ? calcularLinhaSegura(jog.valor, 'chute') : null;
+
+          return (
+            <li key={index} className={`flex items-center justify-between text-sm group ${isHot ? 'bg-green-900/10 p-1 rounded border border-green-500/20' : ''}`}>
+              <div className="flex items-center gap-2 text-neutral-200">
+                <span className="text-base leading-none">{jog.pais}</span>
+                <span className="truncate max-w-[120px] font-medium group-hover:text-white transition-colors">{jog.nome}</span>
+              </div>
+              <div className="flex-grow border-b border-dotted border-neutral-600 mx-2 opacity-30 relative top-[4px]"></div>
+              <div className="flex items-center">
+                <span className={`font-mono font-bold ${destaque ? 'text-yellow-400' : 'text-white'}`}>
+                  {jog.valor}
+                </span>
+                {linhaSegura && <SeloAposta texto={linhaSegura} />}
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -88,7 +118,14 @@ export default function App() {
 
   // Efeito inicial
   React.useEffect(() => {
+    // Prevent horizontal scroll
+    document.body.style.overflowX = 'hidden';
+    
     buscarCompeticoes('FLAMENGO');
+    
+    return () => {
+      document.body.style.overflowX = '';
+    };
   }, []);
 
   const handleTeamChange = (teamId: string) => {
@@ -99,6 +136,17 @@ export default function App() {
   const handleCompChange = (compId: string) => {
     setCompeticaoAtual(compId);
     buscarDadosScout(equipeAtual, compId);
+  };
+
+  const calcularLinhaSegura = (valorMedio: string, tipo: string) => {
+    const numero = parseFloat(valorMedio);
+    let linhaCalculada = numero * 0.66; 
+    
+    if (tipo === 'escanteio') {
+      linhaCalculada = Math.floor(linhaCalculada) + 0.5;
+      return `Over ${linhaCalculada}`;
+    }
+    return null;
   };
 
   // O MOTOR DE EXPORTAÇÃO: Gera a imagem estilo Sofascore
@@ -164,7 +212,7 @@ export default function App() {
             {competicoesDisponiveis.length > 0 && (
               <div className="relative">
                 <select 
-                  className="appearance-none bg-neutral-900 border border-neutral-700 text-white font-medium text-sm rounded-xl focus:ring-red-500 focus:border-red-500 block px-4 py-2.5 pr-10 outline-none transition-all hover:border-neutral-500 cursor-pointer w-full"
+                  className="appearance-none bg-neutral-900 border border-neutral-700 text-white font-medium text-sm rounded-xl focus:ring-red-500 focus:border-red-500 block px-4 py-2.5 pr-10 outline-none transition-colors hover:border-neutral-500 cursor-pointer w-full"
                   onChange={(e) => handleCompChange(e.target.value)}
                   value={competicaoAtual}
                 >
@@ -182,7 +230,7 @@ export default function App() {
           <button 
             onClick={() => buscarDadosScout(equipeAtual, competicaoAtual)}
             disabled={loading || !competicaoAtual}
-            className={`font-bold py-2.5 px-5 rounded-xl transition-all flex items-center gap-2 shadow-lg ${loading ? 'bg-red-900 text-red-300 cursor-not-allowed' : 'bg-red-700 hover:bg-red-600 hover:shadow-red-900/50 text-white'}`}
+            className={`font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center gap-2 shadow-lg ${loading ? 'bg-red-900 text-red-300 cursor-not-allowed' : 'bg-red-700 hover:bg-red-600 hover:shadow-red-900/50 text-white'}`}
           >
             {loading ? (
               <RefreshCw className="animate-spin" size={18} />
@@ -195,7 +243,7 @@ export default function App() {
           <button 
             onClick={exportarImagem}
             disabled={loading}
-            className="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-white font-bold py-2.5 px-5 rounded-xl transition-all flex items-center gap-2 disabled:opacity-50"
+            className="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-white font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50"
           >
             <Download size={18} />
             Exportar JPG
@@ -215,7 +263,19 @@ export default function App() {
 
           {/* CABEÇALHO DO CARD */}
           <div className="text-center mb-10 border-b border-red-900/40 pb-8 relative z-10">
-            <h2 className="text-4xl md:text-5xl font-black tracking-widest text-white drop-shadow-lg uppercase mb-2">🛡️ {equipeAtual}</h2>
+            <div className="flex items-center justify-center gap-4 mb-2">
+              {CLUB_CRESTS[equipeAtual] && (
+                <img 
+                  src={CLUB_CRESTS[equipeAtual]} 
+                  alt={`${equipeAtual} crest`} 
+                  className="w-12 h-12 md:w-16 md:h-16 object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]"
+                  referrerPolicy="no-referrer"
+                />
+              )}
+              <h2 className="text-4xl md:text-5xl font-black tracking-widest text-white drop-shadow-lg uppercase">
+                {equipeAtual}
+              </h2>
+            </div>
             <p className="text-red-400/90 font-medium text-lg tracking-wide uppercase">{dados.campeonato}</p>
           </div>
 
@@ -235,7 +295,13 @@ export default function App() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Gols marcados</span><span className="font-bold text-lg bg-red-950/50 px-3 py-1 rounded-md border border-red-900/30">{dados.medias.gols}</span></div>
                   <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Finalizações totais</span><span className="font-bold text-lg">{dados.medias.finalizacoes}</span></div>
-                  <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Chutes no gol (Alvo)</span><span className="font-bold text-lg">{dados.medias.chutesGol}</span></div>
+                  <div className="flex justify-between items-center">
+                  <span className="text-neutral-400 font-medium">Chutes no gol (Alvo)</span>
+                  <span className="font-bold text-lg flex items-center">
+                    {dados.medias.chutesGol}
+                    {parseFloat(dados.medias.chutesGol) > 5.0 && <SeloAposta texto={calcularLinhaSegura(dados.medias.chutesGol, 'escanteio') || ""} />}
+                  </span>
+                </div>
                   <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Grandes chances criadas</span><span className="font-bold text-lg">{dados.medias.grandesChances}</span></div>
                 </div>
               </div>
@@ -247,7 +313,13 @@ export default function App() {
                 </h4>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Posse de bola</span><span className="font-bold text-lg text-red-200">{dados.medias.posse}</span></div>
-                  <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Escanteios</span><span className="font-bold text-lg">{dados.medias.escanteios}</span></div>
+                  <div className="flex justify-between items-center">
+                  <span className="text-neutral-400 font-medium">Escanteios</span>
+                  <span className="font-bold text-lg flex items-center">
+                    {dados.medias.escanteios}
+                    {parseFloat(dados.medias.escanteios) >= 6.0 && <SeloAposta texto={calcularLinhaSegura(dados.medias.escanteios, 'escanteio') || ""} />}
+                  </span>
+                </div>
                   <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Faltas sofridas</span><span className="font-bold text-lg">{dados.medias.faltas}</span></div>
                 </div>
               </div>

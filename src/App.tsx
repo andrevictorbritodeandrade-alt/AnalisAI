@@ -84,6 +84,7 @@ export default function App() {
   const [equipeAtual, setEquipeAtual] = useState('FLAMENGO');
   const [competicaoAtual, setCompeticaoAtual] = useState('');
   const [competicoesDisponiveis, setCompeticoesDisponiveis] = useState<{id: string, name: string}[]>([]);
+  const [activeTab, setActiveTab] = useState<'scout' | 'betmanager'>('scout');
 
   // Estado principal que guarda os dados iniciais.
   const [dados, setDados] = useState<any>(null);
@@ -184,20 +185,39 @@ export default function App() {
   return (
     <div className="min-h-screen bg-neutral-950 p-4 md:p-8 font-sans text-white flex flex-col items-center">
       
-      {/* HEADER E CONTROLES */}
-      <div className="w-full max-w-4xl mb-8 flex flex-col md:flex-row justify-between items-center bg-black/60 p-5 rounded-2xl border border-red-900/40 shadow-[0_0_15px_rgba(220,38,38,0.1)] backdrop-blur-sm">
+      {/* HEADER E NAVEGAÇÃO PRINCIPAL */}
+      <div className="w-full max-w-4xl mb-6 flex flex-col md:flex-row justify-between items-center bg-black/60 p-5 rounded-2xl border border-red-900/40 shadow-[0_0_15px_rgba(220,38,38,0.1)] backdrop-blur-sm">
         <h1 className="text-3xl font-black tracking-tighter bg-gradient-to-r from-red-500 via-red-600 to-red-800 bg-clip-text text-transparent mb-4 md:mb-0 uppercase flex items-center gap-2">
           <TrendingUp className="text-red-600" size={28} />
           AnalisAI <span className="text-2xl ml-1">⚽🪙</span>
         </h1>
         
-        <div className="flex gap-3 flex-wrap justify-center items-center">
-          <div className="flex flex-col gap-2">
-            <div className="relative">
-              <select 
-                className="appearance-none bg-neutral-900 border border-neutral-700 text-white font-medium text-sm rounded-xl focus:ring-red-500 focus:border-red-500 block px-4 py-2.5 pr-10 outline-none transition-all hover:border-neutral-500 cursor-pointer w-full"
-                onChange={(e) => handleTeamChange(e.target.value)}
-                value={equipeAtual}
+        <div className="flex bg-neutral-900 rounded-xl p-1 border border-white/5">
+          <button 
+            onClick={() => setActiveTab('scout')}
+            className={`px-6 py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-all ${activeTab === 'scout' ? 'bg-red-600 text-white shadow-lg' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}
+          >
+            Scout
+          </button>
+          <button 
+            onClick={() => setActiveTab('betmanager')}
+            className={`px-6 py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-all ${activeTab === 'betmanager' ? 'bg-red-600 text-white shadow-lg' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}
+          >
+            Bet Manager
+          </button>
+        </div>
+      </div>
+
+      {activeTab === 'scout' ? (
+        <>
+          {/* CONTROLES DE EQUIPE E COMPETIÇÃO */}
+          <div className="w-full max-w-4xl mb-8 flex gap-3 flex-wrap justify-center items-center bg-black/40 p-4 rounded-2xl border border-white/5">
+            <div className="flex flex-col gap-2">
+              <div className="relative">
+                <select 
+                  className="appearance-none bg-neutral-900 border border-neutral-700 text-white font-medium text-sm rounded-xl focus:ring-red-500 focus:border-red-500 block px-4 py-2.5 pr-10 outline-none transition-all hover:border-neutral-500 cursor-pointer w-full"
+                  onChange={(e) => handleTeamChange(e.target.value)}
+                  value={equipeAtual}
               >
                 <optgroup label="Brasil" className="bg-neutral-900">
                   <option value="FLAMENGO">Flamengo</option>
@@ -256,7 +276,6 @@ export default function App() {
             Exportar JPG
           </button>
         </div>
-      </div>
 
       {/* PAINEL DE ESTATÍSTICAS (O "CANVAS" A SER EXPORTADO) */}
       {dados ? (
@@ -377,17 +396,15 @@ export default function App() {
           <p className="text-neutral-500 font-medium">Selecione uma equipe e competição para visualizar os dados.</p>
         </div>
       )}
-
-      {/* SEÇÃO: ALAVANCAGEM */}
-      <div className="w-full max-w-4xl mt-12 bg-neutral-900 rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
-        <div className="p-6 bg-neutral-950 border-b border-white/10 flex items-center gap-3">
-          <TrendingUp className="text-amber-500" size={24} />
-          <h2 className="text-2xl font-bold text-white tracking-tight">Plano de Alavancagem</h2>
+      </>
+      ) : (
+        /* SEÇÃO: ALAVANCAGEM */
+        <div className="w-full max-w-4xl bg-neutral-900 rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+          <div className="relative">
+            <Alavancagem />
+          </div>
         </div>
-        <div className="relative">
-          <Alavancagem />
-        </div>
-      </div>
+      )}
 
     </div>
   );

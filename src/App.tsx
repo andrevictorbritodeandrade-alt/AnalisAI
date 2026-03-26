@@ -12,14 +12,21 @@ import {
   LayoutGrid,
   ChevronDown
 } from 'lucide-react';
+import Alavancagem from './components/Alavancagem';
 
 const CLUB_CRESTS: Record<string, string> = {
-  FLAMENGO: "https://share.google/Id1yLQSbXjzi9vl9L",
+  FLAMENGO: "https://a.espncdn.com/i/teamlogos/soccer/500/819.png",
+  PALMEIRAS: "https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg",
+  BOTAFOGO: "https://upload.wikimedia.org/wikipedia/commons/c/cb/Botafogo_de_Futebol_e_Regatas_logo.svg",
+  REAL_MADRID: "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg",
+  MAN_CITY: "https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg",
+  BAYERN: "https://upload.wikimedia.org/wikipedia/commons/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg",
+  PSG: "https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg",
 };
 
 // Componente visual do "Selo de Aposta Recomendada"
 const SeloAposta = ({ texto }: { texto: string }) => (
-  <span className="ml-2 inline-flex items-center gap-1 bg-green-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse shadow-[0_0_8px_rgba(22,163,74,0.6)]">
+  <span className="inline-flex items-center gap-1 bg-green-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse shadow-[0_0_8px_rgba(22,163,74,0.6)]">
     🔥 {texto}
   </span>
 );
@@ -57,11 +64,11 @@ function RankingBox({ titulo, dados, destaque = false, cor = "red", tipo = "none
                 <span className="truncate max-w-[120px] font-medium group-hover:text-white transition-colors">{jog.nome}</span>
               </div>
               <div className="flex-grow border-b border-dotted border-neutral-600 mx-2 opacity-30 relative top-[4px]"></div>
-              <div className="flex items-center">
-                <span className={`font-mono font-bold ${destaque ? 'text-yellow-400' : 'text-white'}`}>
+              <div className="flex items-center justify-end flex-shrink-0">
+                {linhaSegura && <SeloAposta texto={linhaSegura} />}
+                <span className={`font-mono font-bold ml-2 ${destaque ? 'text-yellow-400' : 'text-white'}`}>
                   {jog.valor}
                 </span>
-                {linhaSegura && <SeloAposta texto={linhaSegura} />}
               </div>
             </li>
           );
@@ -181,7 +188,7 @@ export default function App() {
       <div className="w-full max-w-4xl mb-8 flex flex-col md:flex-row justify-between items-center bg-black/60 p-5 rounded-2xl border border-red-900/40 shadow-[0_0_15px_rgba(220,38,38,0.1)] backdrop-blur-sm">
         <h1 className="text-3xl font-black tracking-tighter bg-gradient-to-r from-red-500 via-red-600 to-red-800 bg-clip-text text-transparent mb-4 md:mb-0 uppercase flex items-center gap-2">
           <TrendingUp className="text-red-600" size={28} />
-          AnalisAI
+          AnalisAI <span className="text-2xl ml-1">⚽🪙</span>
         </h1>
         
         <div className="flex gap-3 flex-wrap justify-center items-center">
@@ -297,9 +304,9 @@ export default function App() {
                   <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Finalizações totais</span><span className="font-bold text-lg">{dados.medias.finalizacoes}</span></div>
                   <div className="flex justify-between items-center">
                   <span className="text-neutral-400 font-medium">Chutes no gol (Alvo)</span>
-                  <span className="font-bold text-lg flex items-center">
-                    {dados.medias.chutesGol}
+                  <span className="font-bold text-lg flex items-center justify-end">
                     {parseFloat(dados.medias.chutesGol) > 5.0 && <SeloAposta texto={calcularLinhaSegura(dados.medias.chutesGol, 'escanteio') || ""} />}
+                    <span className="ml-2">{dados.medias.chutesGol}</span>
                   </span>
                 </div>
                   <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Grandes chances criadas</span><span className="font-bold text-lg">{dados.medias.grandesChances}</span></div>
@@ -315,9 +322,9 @@ export default function App() {
                   <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Posse de bola</span><span className="font-bold text-lg text-red-200">{dados.medias.posse}</span></div>
                   <div className="flex justify-between items-center">
                   <span className="text-neutral-400 font-medium">Escanteios</span>
-                  <span className="font-bold text-lg flex items-center">
-                    {dados.medias.escanteios}
+                  <span className="font-bold text-lg flex items-center justify-end">
                     {parseFloat(dados.medias.escanteios) >= 6.0 && <SeloAposta texto={calcularLinhaSegura(dados.medias.escanteios, 'escanteio') || ""} />}
+                    <span className="ml-2">{dados.medias.escanteios}</span>
                   </span>
                 </div>
                   <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Faltas sofridas</span><span className="font-bold text-lg">{dados.medias.faltas}</span></div>
@@ -370,6 +377,17 @@ export default function App() {
           <p className="text-neutral-500 font-medium">Selecione uma equipe e competição para visualizar os dados.</p>
         </div>
       )}
+
+      {/* SEÇÃO: ALAVANCAGEM */}
+      <div className="w-full max-w-4xl mt-12 bg-neutral-900 rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+        <div className="p-6 bg-neutral-950 border-b border-white/10 flex items-center gap-3">
+          <TrendingUp className="text-amber-500" size={24} />
+          <h2 className="text-2xl font-bold text-white tracking-tight">Plano de Alavancagem</h2>
+        </div>
+        <div className="relative">
+          <Alavancagem />
+        </div>
+      </div>
 
     </div>
   );

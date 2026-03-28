@@ -6,8 +6,10 @@ import {
   Gamepad2, ClipboardList, ChevronDown, CheckCircle2,
   XCircle, CheckCircle, Loader2, Plus, Trash2, ChevronUp,
   User, History, PlusCircle, Clock, Calendar as CalendarIcon, Coins, ArrowBigRightDash, 
-  ArrowRight
+  ArrowRight, Upload, Image as ImageIcon
 } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { GoogleGenAI, Type } from "@google/genai";
 
 // --- Assets Visuais de Casas de Aposta ---
 const BetanoIcon = () => (
@@ -80,6 +82,9 @@ const Alavancagem = () => {
   const [history, setHistory] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [expandedBet, setExpandedBet] = useState<number[] | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadTargetDay, setUploadTargetDay] = useState<number | null>(null);
+  const [houseName, setHouseName] = useState('Betano');
 
   const dayRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const now = new Date();
@@ -208,6 +213,120 @@ const Alavancagem = () => {
     updDay(dIdx, { bets: b });
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, dayIndex: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadTargetDay(dayIndex);
+
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        try {
+          const base64Data = (reader.result as string).split(',')[1];
+          
+          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+          
+          const response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: {
+              parts: [
+                {
+                  text: `Analise este print de uma casa de apostas. A casa de apostas informada pelo usuário é '${houseName}'. Extraia as seguintes informações: o nome da casa de apostas (use '${houseName}' se não estiver claro), o nome da partida ou mercado apostado, o valor apostado (stake), a odd total, e o status da aposta (won, lost, ou pending). Retorne estritamente no formato JSON solicitado.`,
+                },
+                {
+                  inlineData: {
+                    data: base64Data,
+                    mimeType: file.type,
+                  },
+                },
+              ],
+            },
+            config: {
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  house: { type: Type.STRING, description: "Nome da casa de apostas" },
+                  match: { type: Type.STRING, description: "Nome da partida ou mercado" },
+                  stake: { type: Type.NUMBER, description: "Valor apostado" },
+                  odd: { type: Type.NUMBER, description: "Odd total" },
+                  status: { type: Type.STRING, description: "Status: 'won', 'lost', ou 'pending'" },
+                },
+                required: ["house", "match", "stake", "odd", "status"],
+              },
+            },
+          });
+
+          const result = JSON.parse(response.text || "{}");
+          
+          const b = [...mData.days[dayIndex].bets];
+          b.push({
+            match: result.match || "APOSTA EXTRAÍDA",
+            house: result.house || "Betano",
+            odd: result.odd || 1.0,
+            stake: result.stake || 0,
+            status: result.status || "pending"
+          });
+          updDay(dayIndex, { bets: b });
+        } catch (err) {
+          console.error("Erro na IA:", err);
+          alert("Não foi possível extrair os dados da imagem.");
+        } finally {
+          setIsUploading(false);
+          setUploadTargetDay(null);
+          e.target.value = '';
+        }
+      };
+    } catch (error) {
+      console.error("Erro ao processar imagem:", error);
+      setIsUploading(false);
+      setUploadTargetDay(null);
+      e.target.value = '';
+    }
+  };
+
+  const chartData = useMemo(() => {
+    let cumulative = 0;
+    const data = [];
+    let lastDayWithData = todayDate;
+    
+    // Find the last day with actual bets if it's beyond today (e.g. testing)
+    for (let i = 30; i >= 0; i--) {
+      if (calcDays[i].bets && calcDays[i].bets.length > 0) {
+        lastDayWithData = Math.max(lastDayWithData, calcDays[i].day);
+        break;
+      }
+    }
+
+    for (let i = 0; i < calcDays.length; i++) {
+      const d = calcDays[i];
+      // Only show up to the last day with data or today (if current month)
+      if (curMonth === todayMonth && d.day > lastDayWithData) {
+        break;
+      }
+      
+      cumulative += d.profit;
+      data.push({
+        day: d.day,
+        profit: d.profit,
+        cumulative: cumulative,
+        status: d.status
+      });
+    }
+    return data;
+  }, [calcDays, curMonth, todayMonth, todayDate]);
+
+  const gradientOffset = useMemo(() => {
+    const dataMax = Math.max(...chartData.map(i => i.cumulative));
+    const dataMin = Math.min(...chartData.map(i => i.cumulative));
+    if (dataMax <= 0) return 0;
+    if (dataMin >= 0) return 1;
+    return dataMax / (dataMax - dataMin);
+  }, [chartData]);
+
   if (loading) return <div className="h-96 bg-neutral-950 flex items-center justify-center rounded-b-2xl"><Loader2 className="animate-spin text-red-500" size={40} /></div>;
 
   return (
@@ -285,6 +404,35 @@ const Alavancagem = () => {
           <button onClick={() => dayRefs.current[todayDate]?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="w-full py-6 bg-neutral-900 border border-white/10 rounded-[2.5rem] text-[12px] font-black uppercase tracking-widest text-neutral-400 hover:text-red-500 hover:border-red-500/50 transition-all flex items-center justify-center gap-4 shadow-2xl">
             <Clock size={20} className="text-red-500" /> IR PARA HOJE
           </button>
+
+          {/* Gráfico de Saúde Financeira */}
+          <div className="bg-neutral-900/50 rounded-[2.5rem] border border-white/10 p-8 shadow-2xl shadow-black/50">
+             <h3 className="text-[11px] font-black uppercase text-neutral-400 mb-6 flex items-center gap-3 border-b-2 border-white/5 pb-4 tracking-widest">
+               <TrendingUp size={18} className="text-emerald-500" /> SAÚDE FINANCEIRA
+             </h3>
+             <div className="h-48 w-full">
+               <ResponsiveContainer width="100%" height="100%">
+                 <AreaChart data={chartData}>
+                   <defs>
+                     <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
+                       <stop offset={gradientOffset} stopColor="#10b981" stopOpacity={0.8}/>
+                       <stop offset={gradientOffset} stopColor="#ef4444" stopOpacity={0.8}/>
+                     </linearGradient>
+                   </defs>
+                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                   <XAxis dataKey="day" stroke="#ffffff50" fontSize={10} tickLine={false} axisLine={false} />
+                   <YAxis stroke="#ffffff50" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `R$${val}`} />
+                   <Tooltip 
+                     contentStyle={{ backgroundColor: '#171717', border: '1px solid #ffffff10', borderRadius: '1rem', fontSize: '12px', fontWeight: 'bold' }}
+                     itemStyle={{ color: '#fff' }}
+                     formatter={(value: number) => [fCurrency(value), 'Saldo Acumulado']}
+                     labelFormatter={(label) => `Dia ${label}`}
+                   />
+                   <Area type="monotone" dataKey="cumulative" stroke="url(#splitColor)" strokeWidth={3} fillOpacity={0.2} fill="url(#splitColor)" />
+                 </AreaChart>
+               </ResponsiveContainer>
+             </div>
+          </div>
         </aside>
 
         {/* Grid Principal */}
@@ -313,9 +461,25 @@ const Alavancagem = () => {
                   <div className="p-10 flex-1 space-y-8">
                      {d.bets && d.bets.length > 0 ? (
                         <div className="space-y-5">
-                           <div className="flex items-center justify-between text-neutral-400 text-[10px] font-black uppercase tracking-[0.2em]">
-                              <span>REGISTOS DE ENTRADA</span>
-                              <button onClick={() => { const b=d.bets||[]; updDay(i, {bets: [...b, {match:'NOVA ENTRADA', house:'Betano', odd:1.40, stake:0, status:'pending'}]}); }} className="text-red-500 hover:text-red-400 flex items-center gap-1 font-black"><PlusCircle size={16} /> ADD</button>
+                           <div className="flex flex-col gap-3 mb-4">
+                              <div className="flex items-center justify-between text-neutral-400 text-[10px] font-black uppercase tracking-[0.2em]">
+                                 <span>REGISTOS DE ENTRADA</span>
+                                 <button onClick={() => { const b=d.bets||[]; updDay(i, {bets: [...b, {match:'NOVA ENTRADA', house:'Betano', odd:1.40, stake:0, status:'pending'}]}); }} className="text-red-500 hover:text-red-400 flex items-center gap-1 font-black"><PlusCircle size={16} /> ADD MANUAL</button>
+                              </div>
+                              <div className="flex items-center gap-2 bg-black/40 p-2 rounded-2xl border border-white/5">
+                                 <input 
+                                   type="text" 
+                                   value={houseName} 
+                                   onChange={(e) => setHouseName(e.target.value)} 
+                                   placeholder="Nome da Casa (ex: Betano)" 
+                                   className="bg-transparent text-white text-xs font-bold px-3 py-1 outline-none w-full"
+                                 />
+                                 <label className={`flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-colors whitespace-nowrap ${isUploading && uploadTargetDay === i ? 'bg-neutral-800 text-neutral-500' : 'bg-emerald-600/20 text-emerald-500 hover:bg-emerald-600/30'}`}>
+                                   {isUploading && uploadTargetDay === i ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                                   PRINT IA
+                                   <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, i)} disabled={isUploading} />
+                                 </label>
+                              </div>
                            </div>
                            <div className="space-y-4 max-h-[600px] overflow-y-auto no-scrollbar pr-1">
                               {d.bets.map((bet: any, bIdx: number) => {
@@ -347,6 +511,16 @@ const Alavancagem = () => {
                                             <div className="grid grid-cols-2 gap-4 mt-5">
                                                <button onClick={() => updBetStatus(i, bIdx, 'won')} className={`py-4 rounded-3xl text-[10px] font-black uppercase transition-all shadow-md ${bet.status === 'won' ? 'bg-emerald-600 text-white shadow-emerald-900/50' : 'bg-black/40 border border-white/10 text-neutral-400 hover:text-white'}`}>GANHOU ✅</button>
                                                <button onClick={() => updBetStatus(i, bIdx, 'lost')} className={`py-4 rounded-3xl text-[10px] font-black uppercase transition-all shadow-md ${bet.status === 'lost' ? 'bg-red-600 text-white shadow-red-900/50' : 'bg-black/40 border border-white/10 text-neutral-400 hover:text-white'}`}>PERDEU ❌</button>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                               <div className="bg-black/40 border border-white/5 p-4 rounded-3xl shadow-inner text-left">
+                                                  <label className="text-[8px] text-neutral-500 font-black block mb-1">CASA DE APOSTA</label>
+                                                  <input type="text" value={bet.house || ''} onChange={(e) => { const b=[...d.bets]; b[bIdx].house=e.target.value; updDay(i, {bets: b}); }} className="w-full bg-transparent text-white font-black text-sm focus:outline-none" />
+                                               </div>
+                                               <div className="bg-black/40 border border-white/5 p-4 rounded-3xl shadow-inner text-left">
+                                                  <label className="text-[8px] text-neutral-500 font-black block mb-1">MERCADO/JOGO</label>
+                                                  <input type="text" value={bet.match || ''} onChange={(e) => { const b=[...d.bets]; b[bIdx].match=e.target.value; updDay(i, {bets: b}); }} className="w-full bg-transparent text-white font-black text-sm focus:outline-none" />
+                                               </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                <div className="bg-black/40 border border-white/5 p-4 rounded-3xl shadow-inner text-right">
@@ -404,6 +578,24 @@ const Alavancagem = () => {
                               </div>
                            </div>
                            <p className="mt-6 text-[8px] font-bold text-red-500 uppercase italic px-10 text-center leading-tight">Mande o print das entradas para validar o plano composto.</p>
+                           
+                           <div className="w-full px-8 mt-6">
+                              <div className="flex items-center gap-2 bg-black/40 p-2 rounded-2xl border border-white/5">
+                                 <input 
+                                   type="text" 
+                                   value={houseName} 
+                                   onChange={(e) => setHouseName(e.target.value)} 
+                                   placeholder="Nome da Casa (ex: Betano)" 
+                                   className="bg-transparent text-white text-xs font-bold px-3 py-1 outline-none w-full"
+                                 />
+                                 <label className={`flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition-colors whitespace-nowrap ${isUploading && uploadTargetDay === i ? 'bg-neutral-800 text-neutral-500' : 'bg-emerald-600/20 text-emerald-500 hover:bg-emerald-600/30'}`}>
+                                   {isUploading && uploadTargetDay === i ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                                   PRINT IA
+                                   <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, i)} disabled={isUploading} />
+                                 </label>
+                              </div>
+                              <button onClick={() => { const b=d.bets||[]; updDay(i, {bets: [...b, {match:'NOVA ENTRADA', house:'Betano', odd:1.40, stake:0, status:'pending'}]}); }} className="w-full mt-3 py-3 bg-red-900/20 text-red-500 hover:bg-red-900/40 text-[10px] font-black uppercase rounded-2xl border border-red-900/50 transition-colors flex items-center justify-center gap-2"><PlusCircle size={16} /> ADD MANUAL</button>
+                           </div>
                         </div>
                      )}
                   </div>

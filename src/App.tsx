@@ -47,17 +47,16 @@ const Logo3D = () => (
         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
       </div>
       <div className="flex flex-col leading-none">
-        <h1 className="text-4xl font-black tracking-tighter uppercase italic flex items-center">
+        <h1 className="text-4xl font-black tracking-tighter uppercase italic flex items-center gap-2">
           <span className="text-white drop-shadow-[0_2px_0_#991b1b,0_4px_0_#7f1d1d,0_8px_12px_rgba(0,0,0,0.6)]">ANALIS</span>
           <span className="text-red-500 drop-shadow-[0_2px_0_#7f1d1d,0_4px_0_#450a0a,0_8px_12px_rgba(0,0,0,0.6)]">AI</span>
+          <div className="flex gap-1.5 ml-1">
+            <div className="w-5 h-5 bg-red-600 rounded-full shadow-[0_0_20px_rgba(220,38,38,0.6)] border border-red-400/30"></div>
+            <div className="w-5 h-5 bg-red-600 rounded-full shadow-[0_0_20px_rgba(220,38,38,0.6)] border border-red-400/30"></div>
+          </div>
         </h1>
         <div className="flex items-center gap-2 mt-1.5">
           <span className="text-[11px] font-black text-red-500/90 uppercase tracking-[0.35em]">Premium Intelligence</span>
-          <div className="flex gap-1">
-            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse delay-75"></div>
-            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse delay-150"></div>
-          </div>
         </div>
       </div>
     </div>
@@ -132,21 +131,25 @@ export default function App() {
 
   // Busca as competições disponíveis para a equipe
   const buscarCompeticoes = async (teamId: string) => {
+    console.log(`Buscando competições para: ${teamId}`);
     setLoading(true);
     try {
       const resposta = await fetch(`/api/competitions/${teamId}`);
       if (!resposta.ok) throw new Error("Erro ao buscar competições");
       const comps = await resposta.json();
+      console.log("Competições recebidas:", comps);
       setCompeticoesDisponiveis(comps);
       if (comps.length > 0) {
         setCompeticaoAtual(comps[0].id);
         await buscarDadosScout(teamId, comps[0].id);
       } else {
+        setCompeticaoAtual('');
         setDados(null);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao buscar competições:", error);
       setCompeticoesDisponiveis([]);
+      setCompeticaoAtual('');
       setDados(null);
     } finally {
       setLoading(false);
@@ -239,52 +242,61 @@ export default function App() {
       {activeTab === 'scout' ? (
         <>
           {/* CONTROLES DE EQUIPE E COMPETIÇÃO */}
-          <div className="w-full max-w-6xl mb-12 flex flex-wrap justify-center items-center gap-6 bg-neutral-900/20 p-8 rounded-[2.5rem] border border-white/5 backdrop-blur-md">
-            <div className="flex flex-col md:flex-row gap-6 w-full md:w-auto">
-              <div className="relative group min-w-[260px]">
+          <div className="w-full max-w-6xl mb-12 flex flex-col items-center gap-8 bg-neutral-900/20 p-8 rounded-[2.5rem] border border-white/5 backdrop-blur-md">
+            <div className="flex flex-col md:flex-row gap-6 w-full justify-center">
+              <div className="relative group min-w-[280px] flex-1 md:flex-none">
                 <label className="absolute -top-3 left-6 bg-[#050505] px-3 text-[10px] font-black text-red-500 uppercase tracking-[0.3em] z-10">Equipe Selecionada</label>
                 <select 
                   className="appearance-none bg-black/40 border border-white/10 text-white font-black text-base rounded-2xl focus:ring-2 focus:ring-red-500/50 focus:border-red-500 block px-6 py-5 pr-14 outline-none transition-all hover:border-red-500/40 cursor-pointer w-full shadow-inner"
                   onChange={(e) => handleTeamChange(e.target.value)}
                   value={equipeAtual}
-              >
-                <optgroup label="Brasil" className="bg-neutral-900">
-                  <option value="FLAMENGO">Flamengo</option>
-                  <option value="PALMEIRAS">Palmeiras</option>
-                  <option value="BOTAFOGO">Botafogo</option>
-                </optgroup>
-                <optgroup label="Europa" className="bg-neutral-900">
-                  <option value="REAL_MADRID">Real Madrid</option>
-                  <option value="MAN_CITY">Manchester City</option>
-                  <option value="BAYERN">Bayern de Munique</option>
-                  <option value="PSG">PSG</option>
-                </optgroup>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-red-500/60 group-hover:text-red-500 transition-colors">
-                <ChevronDown size={22} />
-              </div>
-            </div>
-
-            {competicoesDisponiveis.length > 0 && (
-              <div className="relative group min-w-[260px]">
-                <label className="absolute -top-3 left-6 bg-[#050505] px-3 text-[10px] font-black text-red-500 uppercase tracking-[0.3em] z-10">Competição Ativa</label>
-                <select 
-                  className="appearance-none bg-black/40 border border-white/10 text-white font-black text-base rounded-2xl focus:ring-2 focus:ring-red-500/50 focus:border-red-500 block px-6 py-5 pr-14 outline-none transition-all hover:border-red-500/40 cursor-pointer w-full shadow-inner"
-                  onChange={(e) => handleCompChange(e.target.value)}
-                  value={competicaoAtual}
                 >
-                  {competicoesDisponiveis.map(comp => (
-                    <option key={comp.id} value={comp.id}>{comp.name}</option>
-                  ))}
+                  <optgroup label="Brasil" className="bg-neutral-900">
+                    <option value="FLAMENGO">Flamengo</option>
+                    <option value="PALMEIRAS">Palmeiras</option>
+                    <option value="BOTAFOGO">Botafogo</option>
+                  </optgroup>
+                  <optgroup label="Europa" className="bg-neutral-900">
+                    <option value="REAL_MADRID">Real Madrid</option>
+                    <option value="MAN_CITY">Manchester City</option>
+                    <option value="BAYERN">Bayern de Munique</option>
+                    <option value="PSG">PSG</option>
+                  </optgroup>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-red-500/60 group-hover:text-red-500 transition-colors">
                   <ChevronDown size={22} />
                 </div>
               </div>
-            )}
-          </div>
-          
-          <div className="flex gap-6">
+
+              <div className="relative group min-w-[280px] flex-1 md:flex-none">
+                <label className="absolute -top-3 left-6 bg-[#050505] px-3 text-[10px] font-black text-red-500 uppercase tracking-[0.3em] z-10">Competição Ativa</label>
+                <select 
+                  className="appearance-none bg-black/40 border border-white/10 text-white font-black text-base rounded-2xl focus:ring-2 focus:ring-red-500/50 focus:border-red-500 block px-6 py-5 pr-14 outline-none transition-all hover:border-red-500/40 cursor-pointer w-full shadow-inner disabled:opacity-50 disabled:cursor-not-allowed"
+                  onChange={(e) => handleCompChange(e.target.value)}
+                  value={competicaoAtual}
+                  disabled={competicoesDisponiveis.length === 0 || loading}
+                >
+                  {loading && competicoesDisponiveis.length === 0 ? (
+                    <option value="">Sincronizando...</option>
+                  ) : competicoesDisponiveis.length === 0 ? (
+                    <option value="">Nenhuma competição</option>
+                  ) : (
+                    competicoesDisponiveis.map(comp => (
+                      <option key={comp.id} value={comp.id}>{comp.name}</option>
+                    ))
+                  )}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-red-500/60 group-hover:text-red-500 transition-colors">
+                  {loading ? (
+                    <RefreshCw size={22} className="animate-spin" />
+                  ) : (
+                    <ChevronDown size={22} />
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-6">
             <button 
               onClick={() => buscarDadosScout(equipeAtual, competicaoAtual)}
               disabled={loading || !competicaoAtual}

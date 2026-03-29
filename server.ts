@@ -66,18 +66,24 @@ async function startServer() {
     { id: "PSG", name: "PSG", comps: ["Ligue 1", "Champions League"] }
   ];
 
+  console.log("Iniciando semeadura do banco de dados...");
   teams.forEach(team => {
     team.comps.forEach(comp => {
       seedData(team.id, comp.toUpperCase().replace(/\s/g, '_'), generateMockData(team.name, `🏆 ${comp} 2026`));
     });
   });
+  
+  const count = db.prepare("SELECT COUNT(*) as count FROM scouts").get() as { count: number };
+  console.log(`Banco de dados pronto. Total de registros: ${count.count}`);
 
   // API Routes
   app.get("/api/competitions/:teamId", (req, res) => {
     const { teamId } = req.params;
+    console.log(`API: Buscando competições para ${teamId}`);
     const stmt = db.prepare("SELECT competition_id, data FROM scouts WHERE team_id = ?");
     const rows = stmt.all(teamId) as { competition_id: string, data: string }[];
     
+    console.log(`API: Encontradas ${rows.length} competições`);
     const competitions = rows.map(row => ({
       id: row.competition_id,
       name: JSON.parse(row.data).campeonato

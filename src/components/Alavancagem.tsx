@@ -75,6 +75,17 @@ const nToWords = (n: number) => {
 const MONTHS = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
 const DAYS_OF_WEEK = ["DOMINGO", "SEGUNDA-FEIRA", "TERÇA-FEIRA", "QUARTA-FEIRA", "QUINTA-FEIRA", "SEXTA-FEIRA", "SÁBADO"];
 
+const HOUSES_LIST = [
+  "Sportingbet",
+  "Bet 365",
+  "Betano",
+  "Vaidebet",
+  "H2bet",
+  "Estrelabet",
+  "Bet Nacional",
+  "Superbet"
+];
+
 const Alavancagem = () => {
   const [curMonth, setCurMonth] = useState(new Date().getMonth());
   const [history, setHistory] = useState<any>({});
@@ -105,7 +116,7 @@ const Alavancagem = () => {
       setHistory(JSON.parse(savedHistory));
     } else {
       const initialDays = Array.from({ length: 31 }, (_, i) => ({
-        day: i + 1, status: 'pending', withdrawal: 0, bonus: 0, protectCapital: false, bets: (i + 1 === 26) ? [
+        day: i + 1, status: 'pending', withdrawal: 0, bonus: 0, protectCapital: false, checkIn: {}, bets: (i + 1 === 26) ? [
           { match: "BRASIL X FRANÇA", house: 'Betano', odd: 1.57, stake: 3.13, status: 'won' },
           { match: "MÚLTIPLA 3 JOGOS", house: 'EstrelaBet', odd: 3.04, stake: 0.50, status: 'won' },
           { match: "COMBO 8 FAVORITOS", house: 'Sportingbet', odd: 9.33, stake: 1.07, status: 'lost' }
@@ -135,7 +146,10 @@ const Alavancagem = () => {
       const dayNum = i + 1;
       const isToday = dayNum === todayDate && curMonth === todayMonth;
       const hasBets = d.bets && d.bets.length > 0;
-      const dailyBonus = d.bonus || 0;
+      
+      // Soma dos valores de check-in (bônus/giros grátis)
+      const checkInTotal = Object.values(d.checkIn || {}).reduce((acc: number, val: any) => acc + (Number(val) || 0), 0);
+      const dailyBonus = (d.bonus || 0) + checkInTotal;
 
       if (!foundStart && (hasBets || isToday || dailyBonus > 0)) {
           foundStart = true;
@@ -171,9 +185,11 @@ const Alavancagem = () => {
         stake: currentStake, 
         ret: totalReturn, 
         profit,
+        checkInTotal,
+        foundStart,
         suggestedBets: lastHouseWins.length > 0 ? lastHouseWins : [
-           { house: 'Betano', amount: nextStake * 0.7, odd: 1.57 },
-           { house: 'EstrelaBet', amount: nextStake * 0.3, odd: 3.04 }
+          { house: 'Betano', amount: nextStake * 0.7, odd: 1.57 },
+          { house: 'EstrelaBet', amount: nextStake * 0.3, odd: 3.04 }
         ],
         suggestedStake: nextStake
       });
@@ -516,6 +532,52 @@ const Alavancagem = () => {
                      </div>
                   </div>
 
+                  {/* CHECK-IN DIÁRIO (CASAS DE APOSTA) */}
+                  <div className={`px-10 py-8 border-b-2 ${isToday ? 'bg-red-900/5 border-red-900/20' : 'border-white/5 bg-black/20'}`}>
+                     <div className="flex items-center justify-between mb-6">
+                        <h4 className="text-[10px] font-black text-red-500 uppercase tracking-[0.3em] flex items-center gap-3">
+                           <CheckCircle2 size={16} /> Check-in de Bônus
+                        </h4>
+                        {d.checkInTotal > 0 && (
+                           <span className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black px-3 py-1 rounded-lg border border-emerald-500/20">
+                              Total: {fCurrency(d.checkInTotal)}
+                           </span>
+                        )}
+                     </div>
+                     
+                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {HOUSES_LIST.map(house => (
+                           <div key={house} className="bg-black/40 p-3 rounded-xl border border-white/5 flex flex-col gap-1 group/house hover:border-red-500/30 transition-all">
+                              <span className="text-[8px] text-neutral-500 font-black uppercase truncate">{house}</span>
+                              <div className="flex items-center gap-1">
+                                 <span className="text-[9px] text-red-500 font-black">R$</span>
+                                 <input 
+                                   type="number" 
+                                   step="0.01"
+                                   value={d.checkIn?.[house] || ''} 
+                                   onChange={(e) => {
+                                      const newCheckIn = { ...(d.checkIn || {}) };
+                                      newCheckIn[house] = e.target.value;
+                                      updDay(i, { checkIn: newCheckIn });
+                                   }} 
+                                   placeholder="0.00"
+                                   className="bg-transparent text-white font-black text-xs w-full focus:outline-none"
+                                 />
+                              </div>
+                           </div>
+                        ))}
+                     </div>
+
+                     {d.stake === 0 && (d.bets?.length === 0) && d.foundStart && (
+                        <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-4 animate-pulse">
+                           <AlertCircle size={20} className="text-red-500 shrink-0" />
+                           <p className="text-[10px] font-black text-red-400 uppercase tracking-tight">
+                              Sem saldo ou bônus hoje. Recomendado aguardar giros grátis de amanhã.
+                           </p>
+                        </div>
+                     )}
+                  </div>
+
                   <div className="p-12 flex-1 space-y-10">
                      {d.bets && d.bets.length > 0 ? (
                         <div className="space-y-8">
@@ -686,8 +748,8 @@ const Alavancagem = () => {
                               <p className="text-[11px] text-neutral-500 font-black uppercase mb-2 tracking-[0.3em]">INVESTIDO</p>
                               <p className="text-4xl font-black text-white leading-none tracking-tighter font-mono">{fCurrency(d.stake)}</p>
                               <span className="text-[9px] text-neutral-600 italic font-black uppercase mt-3 tracking-tighter">{nToWords(d.stake)}</span>
-                              {d.bonus > 0 && (
-                                 <span className="text-[9px] bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-md font-black uppercase tracking-tighter ml-2">+{fCurrency(d.bonus)} Bônus</span>
+                              {(d.bonus > 0 || d.checkInTotal > 0) && (
+                                 <span className="text-[9px] bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-md font-black uppercase tracking-tighter ml-2">+{fCurrency(d.bonus + d.checkInTotal)} Bônus</span>
                               )}
                            </div>
                            <div className="text-right flex flex-col">

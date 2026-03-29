@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import { 
   Trophy, 
@@ -10,7 +10,15 @@ import {
   Users, 
   ShieldCheck,
   LayoutGrid,
-  ChevronDown
+  ChevronDown,
+  CircleDollarSign,
+  Zap,
+  BarChart3,
+  PieChart,
+  Settings2,
+  ExternalLink,
+  Search,
+  Filter
 } from 'lucide-react';
 import Alavancagem from './components/Alavancagem';
 
@@ -24,17 +32,49 @@ const CLUB_CRESTS: Record<string, string> = {
   PSG: "https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg",
 };
 
+// Componente visual do Logo 3D
+const Logo3D = () => (
+  <div className="relative group cursor-pointer select-none">
+    <div className="flex items-center gap-4">
+      <div className="relative w-14 h-14 flex items-center justify-center transform-gpu transition-all group-hover:scale-110 group-hover:rotate-3 duration-500">
+        {/* Camadas de sombra para efeito 3D profundo */}
+        <div className="absolute inset-0 bg-red-600 rounded-2xl rotate-6 opacity-20 blur-md"></div>
+        <div className="absolute inset-0 bg-red-500 rounded-2xl -rotate-3 opacity-40"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-red-400 via-red-600 to-red-800 rounded-2xl shadow-[0_15px_30px_rgba(220,38,38,0.5),inset_0_2px_4px_rgba(255,255,255,0.4)] flex items-center justify-center border border-red-400/30">
+          <TrendingUp className="text-white drop-shadow-[0_3px_3px_rgba(0,0,0,0.6)]" size={32} strokeWidth={3} />
+        </div>
+        {/* Brilho animado */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+      </div>
+      <div className="flex flex-col leading-none">
+        <h1 className="text-4xl font-black tracking-tighter uppercase italic flex items-center">
+          <span className="text-white drop-shadow-[0_2px_0_#991b1b,0_4px_0_#7f1d1d,0_8px_12px_rgba(0,0,0,0.6)]">ANALIS</span>
+          <span className="text-red-500 drop-shadow-[0_2px_0_#7f1d1d,0_4px_0_#450a0a,0_8px_12px_rgba(0,0,0,0.6)]">AI</span>
+        </h1>
+        <div className="flex items-center gap-2 mt-1.5">
+          <span className="text-[11px] font-black text-red-500/90 uppercase tracking-[0.35em]">Premium Intelligence</span>
+          <div className="flex gap-1">
+            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse delay-75"></div>
+            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse delay-150"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 // Componente visual do "Selo de Aposta Recomendada"
 const SeloAposta = ({ texto }: { texto: string }) => (
-  <span className="inline-flex items-center gap-1 bg-green-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse shadow-[0_0_8px_rgba(22,163,74,0.6)]">
-    🔥 {texto}
+  <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white text-[10px] font-black px-3 py-1.5 rounded-xl uppercase tracking-wider animate-pulse shadow-[0_4px_15px_rgba(16,185,129,0.4)] border border-emerald-400/30">
+    <Zap size={12} className="fill-white" /> {texto}
   </span>
 );
 
 // Componente Auxiliar para renderizar as listas de Top 3
 function RankingBox({ titulo, dados, destaque = false, cor = "red", tipo = "none" }: { titulo: string, dados: any[], destaque?: boolean, cor?: "red" | "neutral", tipo?: "chute" | "none" }) {
-  const bgClass = cor === "red" ? "bg-black/30" : "bg-neutral-950/50";
-  const titleColor = destaque ? "text-yellow-400" : (cor === "red" ? "text-red-300" : "text-neutral-300");
+  const bgClass = cor === "red" ? "bg-neutral-900/40" : "bg-black/40";
+  const titleColor = destaque ? "text-amber-400" : (cor === "red" ? "text-red-400" : "text-neutral-400");
 
   const calcularLinhaSegura = (valorMedio: string, tipo: string) => {
     const numero = parseFloat(valorMedio);
@@ -48,25 +88,28 @@ function RankingBox({ titulo, dados, destaque = false, cor = "red", tipo = "none
   };
 
   return (
-    <div className={`${bgClass} rounded-lg p-3 border border-white/5 h-full transition-colors hover:border-white/10 relative overflow-hidden`}>
-      <h5 className={`${titleColor} font-semibold mb-3 text-sm flex items-center gap-2`}>
+    <div className={`${bgClass} rounded-[2rem] p-6 border border-white/5 h-full transition-all hover:border-red-500/30 hover:bg-neutral-900/70 group shadow-2xl backdrop-blur-sm`}>
+      <h5 className={`${titleColor} font-black mb-6 text-[12px] uppercase tracking-widest flex items-center gap-3 border-b border-white/5 pb-4`}>
+        <div className={`w-2 h-2 rounded-full ${destaque ? 'bg-amber-500 shadow-[0_0_10px_#f59e0b]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'}`}></div>
         {titulo}
       </h5>
-      <ul className="space-y-2">
+      <ul className="space-y-4">
         {dados.map((jog, index) => {
           const isHot = tipo === 'chute' && parseFloat(jog.valor) >= 1.5;
           const linhaSegura = isHot ? calcularLinhaSegura(jog.valor, 'chute') : null;
 
           return (
-            <li key={index} className={`flex items-center justify-between text-sm group ${isHot ? 'bg-green-900/10 p-1 rounded border border-green-500/20' : ''}`}>
-              <div className="flex items-center gap-2 text-neutral-200">
-                <span className="text-base leading-none">{jog.pais}</span>
-                <span className="truncate max-w-[120px] font-medium group-hover:text-white transition-colors">{jog.nome}</span>
+            <li key={index} className={`flex items-center justify-between text-sm group/item ${isHot ? 'bg-emerald-500/5 p-3 rounded-2xl border border-emerald-500/10' : ''}`}>
+              <div className="flex items-center gap-4 text-neutral-200">
+                <div className="w-7 h-7 rounded-xl bg-neutral-800 flex items-center justify-center text-[11px] font-black text-neutral-500 border border-white/5 group-hover/item:bg-red-600/20 group-hover/item:text-red-500 transition-colors">
+                  {index + 1}
+                </div>
+                <span className="text-lg leading-none opacity-80">{jog.pais}</span>
+                <span className="truncate max-w-[160px] font-black group-hover/item:text-white transition-colors tracking-tight text-base">{jog.nome}</span>
               </div>
-              <div className="flex-grow border-b border-dotted border-neutral-600 mx-2 opacity-30 relative top-[4px]"></div>
-              <div className="flex items-center justify-end flex-shrink-0">
+              <div className="flex items-center justify-end gap-4">
                 {linhaSegura && <SeloAposta texto={linhaSegura} />}
-                <span className={`font-mono font-bold ml-2 ${destaque ? 'text-yellow-400' : 'text-white'}`}>
+                <span className={`font-mono font-black text-xl ${destaque ? 'text-amber-400' : 'text-white'} drop-shadow-sm`}>
                   {jog.valor}
                 </span>
               </div>
@@ -85,12 +128,11 @@ export default function App() {
   const [competicaoAtual, setCompeticaoAtual] = useState('');
   const [competicoesDisponiveis, setCompeticoesDisponiveis] = useState<{id: string, name: string}[]>([]);
   const [activeTab, setActiveTab] = useState<'scout' | 'betmanager'>('scout');
-
-  // Estado principal que guarda os dados iniciais.
   const [dados, setDados] = useState<any>(null);
 
   // Busca as competições disponíveis para a equipe
   const buscarCompeticoes = async (teamId: string) => {
+    setLoading(true);
     try {
       const resposta = await fetch(`/api/competitions/${teamId}`);
       if (!resposta.ok) throw new Error("Erro ao buscar competições");
@@ -98,7 +140,7 @@ export default function App() {
       setCompeticoesDisponiveis(comps);
       if (comps.length > 0) {
         setCompeticaoAtual(comps[0].id);
-        buscarDadosScout(teamId, comps[0].id);
+        await buscarDadosScout(teamId, comps[0].id);
       } else {
         setDados(null);
       }
@@ -106,6 +148,8 @@ export default function App() {
       console.error(error);
       setCompeticoesDisponiveis([]);
       setDados(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -119,18 +163,16 @@ export default function App() {
       setDados(novosDados);
     } catch (error) {
       console.error(error);
+      setDados(null);
     } finally {
       setLoading(false);
     }
   };
 
   // Efeito inicial
-  React.useEffect(() => {
-    // Prevent horizontal scroll
+  useEffect(() => {
     document.body.style.overflowX = 'hidden';
-    
     buscarCompeticoes('FLAMENGO');
-    
     return () => {
       document.body.style.overflowX = '';
     };
@@ -146,63 +188,49 @@ export default function App() {
     buscarDadosScout(equipeAtual, compId);
   };
 
-  const calcularLinhaSegura = (valorMedio: string, tipo: string) => {
-    const numero = parseFloat(valorMedio);
-    let linhaCalculada = numero * 0.66; 
-    
-    if (tipo === 'escanteio') {
-      linhaCalculada = Math.floor(linhaCalculada) + 0.5;
-      return `Over ${linhaCalculada}`;
-    }
-    return null;
-  };
-
-  // O MOTOR DE EXPORTAÇÃO: Gera a imagem estilo Sofascore
   const exportarImagem = async () => {
     if (!painelRef.current) return;
-    
+    setLoading(true);
     try {
-      setLoading(true);
       const canvas = await html2canvas(painelRef.current, {
         backgroundColor: '#0a0a0a',
-        scale: 2, // Melhor qualidade
+        scale: 2,
+        useCORS: true,
         logging: false,
-        useCORS: true
       });
-      
       const link = document.createElement('a');
-      link.download = `scout-${equipeAtual.toLowerCase()}-2026.jpg`;
+      link.download = `analisai-${equipeAtual.toLowerCase()}-${new Date().getTime()}.jpg`;
       link.href = canvas.toDataURL('image/jpeg', 0.9);
       link.click();
-    } catch (error) {
-      console.error("Erro ao exportar imagem:", error);
-      alert("Erro ao gerar imagem. Tente novamente.");
+    } catch (err) {
+      console.error("Erro ao exportar:", err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-4 md:p-8 font-sans text-white flex flex-col items-center">
+    <div className="min-h-screen bg-[#050505] p-4 md:p-8 font-sans text-white flex flex-col items-center selection:bg-red-500/30">
       
       {/* HEADER E NAVEGAÇÃO PRINCIPAL */}
-      <div className="w-full max-w-4xl mb-6 flex flex-col md:flex-row justify-between items-center bg-black/60 p-5 rounded-2xl border border-red-900/40 shadow-[0_0_15px_rgba(220,38,38,0.1)] backdrop-blur-sm">
-        <h1 className="text-3xl font-black tracking-tighter bg-gradient-to-r from-red-500 via-red-600 to-red-800 bg-clip-text text-transparent mb-4 md:mb-0 uppercase flex items-center gap-2">
-          <TrendingUp className="text-red-600" size={28} />
-          AnalisAI <span className="text-2xl ml-1">⚽🪙</span>
-        </h1>
+      <div className="w-full max-w-6xl mb-10 flex flex-col md:flex-row justify-between items-center bg-neutral-900/40 p-8 rounded-[3rem] border border-white/5 shadow-[0_30px_60px_rgba(0,0,0,0.8)] backdrop-blur-xl relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
         
-        <div className="flex bg-neutral-900 rounded-xl p-1 border border-white/5">
+        <Logo3D />
+        
+        <div className="flex bg-black/60 rounded-[2rem] p-2 border border-white/5 shadow-inner mt-8 md:mt-0">
           <button 
             onClick={() => setActiveTab('scout')}
-            className={`px-6 py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-all ${activeTab === 'scout' ? 'bg-red-600 text-white shadow-lg' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}
+            className={`flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 ${activeTab === 'scout' ? 'bg-gradient-to-b from-red-500 to-red-700 text-white shadow-[0_8px_25px_rgba(220,38,38,0.5)] scale-105' : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/5'}`}
           >
+            <BarChart3 size={18} />
             Scout
           </button>
           <button 
             onClick={() => setActiveTab('betmanager')}
-            className={`px-6 py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-all ${activeTab === 'betmanager' ? 'bg-red-600 text-white shadow-lg' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}
+            className={`flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 ${activeTab === 'betmanager' ? 'bg-gradient-to-b from-red-500 to-red-700 text-white shadow-[0_8px_25px_rgba(220,38,38,0.5)] scale-105' : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/5'}`}
           >
+            <CircleDollarSign size={18} />
             Bet Manager
           </button>
         </div>
@@ -211,11 +239,12 @@ export default function App() {
       {activeTab === 'scout' ? (
         <>
           {/* CONTROLES DE EQUIPE E COMPETIÇÃO */}
-          <div className="w-full max-w-4xl mb-8 flex gap-3 flex-wrap justify-center items-center bg-black/40 p-4 rounded-2xl border border-white/5">
-            <div className="flex flex-col gap-2">
-              <div className="relative">
+          <div className="w-full max-w-6xl mb-12 flex flex-wrap justify-center items-center gap-6 bg-neutral-900/20 p-8 rounded-[2.5rem] border border-white/5 backdrop-blur-md">
+            <div className="flex flex-col md:flex-row gap-6 w-full md:w-auto">
+              <div className="relative group min-w-[260px]">
+                <label className="absolute -top-3 left-6 bg-[#050505] px-3 text-[10px] font-black text-red-500 uppercase tracking-[0.3em] z-10">Equipe Selecionada</label>
                 <select 
-                  className="appearance-none bg-neutral-900 border border-neutral-700 text-white font-medium text-sm rounded-xl focus:ring-red-500 focus:border-red-500 block px-4 py-2.5 pr-10 outline-none transition-all hover:border-neutral-500 cursor-pointer w-full"
+                  className="appearance-none bg-black/40 border border-white/10 text-white font-black text-base rounded-2xl focus:ring-2 focus:ring-red-500/50 focus:border-red-500 block px-6 py-5 pr-14 outline-none transition-all hover:border-red-500/40 cursor-pointer w-full shadow-inner"
                   onChange={(e) => handleTeamChange(e.target.value)}
                   value={equipeAtual}
               >
@@ -231,15 +260,16 @@ export default function App() {
                   <option value="PSG">PSG</option>
                 </optgroup>
               </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-neutral-400">
-                <ChevronDown size={16} />
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-red-500/60 group-hover:text-red-500 transition-colors">
+                <ChevronDown size={22} />
               </div>
             </div>
 
             {competicoesDisponiveis.length > 0 && (
-              <div className="relative">
+              <div className="relative group min-w-[260px]">
+                <label className="absolute -top-3 left-6 bg-[#050505] px-3 text-[10px] font-black text-red-500 uppercase tracking-[0.3em] z-10">Competição Ativa</label>
                 <select 
-                  className="appearance-none bg-neutral-900 border border-neutral-700 text-white font-medium text-sm rounded-xl focus:ring-red-500 focus:border-red-500 block px-4 py-2.5 pr-10 outline-none transition-colors hover:border-neutral-500 cursor-pointer w-full"
+                  className="appearance-none bg-black/40 border border-white/10 text-white font-black text-base rounded-2xl focus:ring-2 focus:ring-red-500/50 focus:border-red-500 block px-6 py-5 pr-14 outline-none transition-all hover:border-red-500/40 cursor-pointer w-full shadow-inner"
                   onChange={(e) => handleCompChange(e.target.value)}
                   value={competicaoAtual}
                 >
@@ -247,34 +277,36 @@ export default function App() {
                     <option key={comp.id} value={comp.id}>{comp.name}</option>
                   ))}
                 </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-neutral-400">
-                  <ChevronDown size={16} />
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-red-500/60 group-hover:text-red-500 transition-colors">
+                  <ChevronDown size={22} />
                 </div>
               </div>
             )}
           </div>
           
-          <button 
-            onClick={() => buscarDadosScout(equipeAtual, competicaoAtual)}
-            disabled={loading || !competicaoAtual}
-            className={`font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center gap-2 shadow-lg ${loading ? 'bg-red-900 text-red-300 cursor-not-allowed' : 'bg-red-700 hover:bg-red-600 hover:shadow-red-900/50 text-white'}`}
-          >
-            {loading ? (
-              <RefreshCw className="animate-spin" size={18} />
-            ) : (
-              <RefreshCw size={18} />
-            )}
-            {loading ? 'Carregando...' : 'Atualizar Dados'}
-          </button>
-          
-          <button 
-            onClick={exportarImagem}
-            disabled={loading}
-            className="bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-white font-bold py-2.5 px-5 rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50"
-          >
-            <Download size={18} />
-            Exportar JPG
-          </button>
+          <div className="flex gap-6">
+            <button 
+              onClick={() => buscarDadosScout(equipeAtual, competicaoAtual)}
+              disabled={loading || !competicaoAtual}
+              className={`font-black uppercase text-[12px] tracking-[0.25em] py-5 px-10 rounded-2xl transition-all flex items-center gap-4 shadow-2xl active:scale-95 ${loading ? 'bg-red-900/20 text-red-500/50 cursor-not-allowed border border-red-900/30' : 'bg-gradient-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white shadow-red-900/40'}`}
+            >
+              {loading ? (
+                <RefreshCw className="animate-spin" size={20} />
+              ) : (
+                <RefreshCw size={20} />
+              )}
+              {loading ? 'Sincronizando...' : 'Atualizar Inteligência'}
+            </button>
+            
+            <button 
+              onClick={exportarImagem}
+              disabled={loading || !dados}
+              className="bg-neutral-800/50 hover:bg-neutral-800 border border-white/5 text-white font-black uppercase text-[12px] tracking-[0.25em] py-5 px-10 rounded-2xl transition-all flex items-center gap-4 disabled:opacity-30 active:scale-95 shadow-xl"
+            >
+              <Download size={20} className="text-red-500" />
+              Exportar Scout
+            </button>
+          </div>
         </div>
 
       {/* PAINEL DE ESTATÍSTICAS (O "CANVAS" A SER EXPORTADO) */}
@@ -282,130 +314,226 @@ export default function App() {
         <div 
           id="scout-panel"
           ref={painelRef}
-          className="w-full max-w-4xl bg-gradient-to-br from-red-950 via-neutral-900 to-black p-6 md:p-10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-red-900/30 relative overflow-hidden"
+          className="w-full max-w-6xl bg-[#0a0a0a] p-10 md:p-16 rounded-[4rem] shadow-[0_60px_120px_rgba(0,0,0,0.9)] border border-white/5 relative overflow-hidden"
         >
-          {/* Efeito de brilho de fundo */}
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-red-900/20 via-transparent to-transparent pointer-events-none"></div>
+          {/* Efeitos de Fundo Premium */}
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-red-600/15 via-transparent to-transparent pointer-events-none"></div>
+          <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-red-900/10 via-transparent to-transparent pointer-events-none"></div>
+          <div className="absolute inset-0 opacity-[0.04] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
 
           {/* CABEÇALHO DO CARD */}
-          <div className="text-center mb-10 border-b border-red-900/40 pb-8 relative z-10">
-            <div className="flex items-center justify-center gap-4 mb-2">
-              {CLUB_CRESTS[equipeAtual] && (
-                <img 
-                  src={CLUB_CRESTS[equipeAtual]} 
-                  alt={`${equipeAtual} crest`} 
-                  className="w-12 h-12 md:w-16 md:h-16 object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]"
-                  referrerPolicy="no-referrer"
-                />
-              )}
-              <h2 className="text-4xl md:text-5xl font-black tracking-widest text-white drop-shadow-lg uppercase">
-                {equipeAtual}
-              </h2>
+          <div className="text-center mb-16 border-b border-white/5 pb-14 relative z-10">
+            <div className="flex flex-col items-center justify-center gap-8">
+              <div className="relative group">
+                <div className="absolute inset-0 bg-red-600 rounded-full blur-3xl opacity-30 group-hover:opacity-50 transition-opacity duration-1000"></div>
+                {CLUB_CRESTS[equipeAtual] && (
+                  <img 
+                    src={CLUB_CRESTS[equipeAtual]} 
+                    alt={`${equipeAtual} crest`} 
+                    className="w-32 h-32 md:w-44 md:h-44 object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.6)] relative z-10 transform transition-all group-hover:scale-110 group-hover:rotate-6 duration-700"
+                    referrerPolicy="no-referrer"
+                  />
+                )}
+              </div>
+              <div className="flex flex-col gap-3">
+                <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-white drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)] uppercase italic">
+                  {equipeAtual}
+                </h2>
+                <div className="flex items-center justify-center gap-4">
+                  <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-red-600"></div>
+                  <p className="text-red-500 font-black text-base tracking-[0.5em] uppercase">{dados.campeonato}</p>
+                  <div className="h-[2px] w-12 bg-gradient-to-l from-transparent to-red-600"></div>
+                </div>
+              </div>
             </div>
-            <p className="text-red-400/90 font-medium text-lg tracking-wide uppercase">{dados.campeonato}</p>
           </div>
 
           {/* SEÇÃO 1: MÉDIAS GERAIS */}
-          <div className="mb-10 relative z-10">
-            <h3 className="text-xl font-bold mb-5 flex items-center gap-3 bg-red-950/40 border border-red-900/30 p-3 rounded-xl uppercase tracking-wider text-red-100">
-              <LayoutGrid className="text-red-500" size={20} />
-              Médias da Equipe <span className="text-sm text-red-400/70 font-normal normal-case ml-auto">Por Jogo</span>
-            </h3>
+          <div className="mb-16 relative z-10">
+            <div className="flex items-center gap-6 mb-10">
+              <div className="w-14 h-14 rounded-2xl bg-red-600/20 flex items-center justify-center border border-red-500/40 shadow-lg">
+                <LayoutGrid className="text-red-500" size={28} />
+              </div>
+              <h3 className="text-3xl font-black uppercase tracking-tighter text-white italic">
+                Performance <span className="text-red-500">Analítica</span>
+              </h3>
+              <div className="flex-grow h-[1px] bg-gradient-to-r from-white/10 via-white/5 to-transparent"></div>
+            </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               {/* Tabela Ataque */}
-              <div className="bg-black/50 rounded-xl p-5 border border-white/5 shadow-inner">
-                <h4 className="text-red-400 font-bold mb-4 border-b border-white/10 pb-3 flex items-center gap-2">
-                  <Target size={18} /> Ataque e Finalizações
-                </h4>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Gols marcados</span><span className="font-bold text-lg bg-red-950/50 px-3 py-1 rounded-md border border-red-900/30">{dados.medias.gols}</span></div>
-                  <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Finalizações totais</span><span className="font-bold text-lg">{dados.medias.finalizacoes}</span></div>
-                  <div className="flex justify-between items-center">
-                  <span className="text-neutral-400 font-medium">Chutes no gol (Alvo)</span>
-                  <span className="font-bold text-lg flex items-center justify-end">
-                    {parseFloat(dados.medias.chutesGol) > 5.0 && <SeloAposta texto={calcularLinhaSegura(dados.medias.chutesGol, 'escanteio') || ""} />}
-                    <span className="ml-2">{dados.medias.chutesGol}</span>
-                  </span>
+              <div className="bg-neutral-900/40 rounded-[3rem] p-10 border border-white/5 shadow-2xl backdrop-blur-md relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-15 transition-all duration-700 transform group-hover:scale-125">
+                  <Target size={120} />
                 </div>
-                  <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Grandes chances criadas</span><span className="font-bold text-lg">{dados.medias.grandesChances}</span></div>
+                <h4 className="text-red-400 font-black text-sm uppercase tracking-[0.25em] mb-10 flex items-center gap-4 border-b border-white/5 pb-6">
+                  <Target size={22} className="text-red-500" /> Ofensividade & Precisão
+                </h4>
+                <div className="space-y-7">
+                  <div className="flex justify-between items-center group/row">
+                    <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Gols marcados</span>
+                    <span className="font-black text-3xl text-white bg-red-600/10 px-6 py-2 rounded-2xl border border-red-500/20 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">{dados.medias.gols}</span>
+                  </div>
+                  <div className="flex justify-between items-center group/row">
+                    <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Finalizações totais</span>
+                    <span className="font-black text-2xl text-white">{dados.medias.finalizacoes}</span>
+                  </div>
+                  <div className="flex justify-between items-center group/row">
+                    <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Chutes no Alvo</span>
+                    <div className="flex items-center gap-4">
+                      {parseFloat(dados.medias.chutesGol) > 5.0 && <SeloAposta texto="Elite Tier" />}
+                      <span className="font-black text-2xl text-white">{dados.medias.chutesGol}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center group/row">
+                    <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Big Chances</span>
+                    <span className="font-black text-2xl text-white">{dados.medias.grandesChances}</span>
+                  </div>
                 </div>
               </div>
 
               {/* Tabela Controle */}
-              <div className="bg-black/50 rounded-xl p-5 border border-white/5 shadow-inner">
-                <h4 className="text-red-400 font-bold mb-4 border-b border-white/10 pb-3 flex items-center gap-2">
-                  <Activity size={18} /> Controle e Bolas Paradas
-                </h4>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Posse de bola</span><span className="font-bold text-lg text-red-200">{dados.medias.posse}</span></div>
-                  <div className="flex justify-between items-center">
-                  <span className="text-neutral-400 font-medium">Escanteios</span>
-                  <span className="font-bold text-lg flex items-center justify-end">
-                    {parseFloat(dados.medias.escanteios) >= 6.0 && <SeloAposta texto={calcularLinhaSegura(dados.medias.escanteios, 'escanteio') || ""} />}
-                    <span className="ml-2">{dados.medias.escanteios}</span>
-                  </span>
+              <div className="bg-neutral-900/40 rounded-[3rem] p-10 border border-white/5 shadow-2xl backdrop-blur-md relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-15 transition-all duration-700 transform group-hover:scale-125">
+                  <Activity size={120} />
                 </div>
-                  <div className="flex justify-between items-center"><span className="text-neutral-400 font-medium">Faltas sofridas</span><span className="font-bold text-lg">{dados.medias.faltas}</span></div>
+                <h4 className="text-red-400 font-black text-sm uppercase tracking-[0.25em] mb-10 flex items-center gap-4 border-b border-white/5 pb-6">
+                  <Activity size={22} className="text-red-500" /> Domínio & Posicionamento
+                </h4>
+                <div className="space-y-7">
+                  <div className="flex justify-between items-center group/row">
+                    <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Posse de bola</span>
+                    <span className="font-black text-3xl text-red-500 italic drop-shadow-[0_0_10px_rgba(239,68,68,0.3)]">{dados.medias.posse}</span>
+                  </div>
+                  <div className="flex justify-between items-center group/row">
+                    <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Escanteios</span>
+                    <div className="flex items-center gap-4">
+                      {parseFloat(dados.medias.escanteios) >= 6.0 && <SeloAposta texto="Over 5.5" />}
+                      <span className="font-black text-2xl text-white">{dados.medias.escanteios}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center group/row">
+                    <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Faltas sofridas</span>
+                    <span className="font-black text-2xl text-white">{dados.medias.faltas}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* SEÇÃO 2: TOP JOGADORES - ATAQUE */}
-          <div className="mb-10 relative z-10">
-            <h3 className="text-xl font-bold mb-5 flex items-center gap-3 bg-red-950/40 border border-red-900/30 p-3 rounded-xl uppercase tracking-wider text-red-100">
-              <Users className="text-red-500" size={20} />
-              Top Jogadores - Setor Ofensivo
-            </h3>
+          <div className="mb-16 relative z-10">
+            <div className="flex items-center gap-6 mb-10">
+              <div className="w-14 h-14 rounded-2xl bg-red-600/20 flex items-center justify-center border border-red-500/40 shadow-lg">
+                <Users className="text-red-500" size={28} />
+              </div>
+              <h3 className="text-3xl font-black uppercase tracking-tighter text-white italic">
+                Elite <span className="text-red-500">Ofensiva</span>
+              </h3>
+              <div className="flex-grow h-[1px] bg-gradient-to-r from-white/10 via-white/5 to-transparent"></div>
+            </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <RankingBox titulo="👟 Finalizações Totais" dados={dados.ataque.finalizacoesTotais} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <RankingBox titulo="👟 Finalizações" dados={dados.ataque.finalizacoesTotais} />
               <RankingBox titulo="🎯 Chutes no Gol" dados={dados.ataque.chutesNoGol} />
-              <RankingBox titulo="🚀 Finalizações de Fora da Área" dados={dados.ataque.finalizacoesFora} />
-              <RankingBox titulo="☄️ Gols de Fora da Área (Total)" dados={dados.ataque.golsFora} />
-              <RankingBox titulo="🚩 Escanteios e Cruzamentos Precisos" dados={dados.ataque.escanteiosCruzamentos} />
-              <RankingBox titulo="⭐ Maior Nota Média (Rating)" dados={dados.ataque.rating} destaque />
+              <RankingBox titulo="🚀 Fora da Área" dados={dados.ataque.finalizacoesFora} />
+              <RankingBox titulo="☄️ Gols Longos" dados={dados.ataque.golsFora} />
+              <RankingBox titulo="🚩 Cruzamentos" dados={dados.ataque.escanteiosCruzamentos} />
+              <RankingBox titulo="⭐ Rating Premium" dados={dados.ataque.rating} destaque />
             </div>
           </div>
 
           {/* SEÇÃO 3: TOP JOGADORES - DEFESA */}
           <div className="relative z-10">
-            <h3 className="text-xl font-bold mb-5 flex items-center gap-3 bg-neutral-900/80 border border-neutral-700/50 p-3 rounded-xl uppercase tracking-wider text-neutral-200">
-              <ShieldCheck className="text-neutral-400" size={20} />
-              Top Jogadores - Setor Defensivo
-            </h3>
+            <div className="flex items-center gap-6 mb-10">
+              <div className="w-14 h-14 rounded-2xl bg-neutral-800 flex items-center justify-center border border-white/10 shadow-lg">
+                <ShieldCheck className="text-neutral-400" size={28} />
+              </div>
+              <h3 className="text-3xl font-black uppercase tracking-tighter text-white italic">
+                Muralha <span className="text-neutral-500">Defensiva</span>
+              </h3>
+              <div className="flex-grow h-[1px] bg-gradient-to-r from-white/10 via-white/5 to-transparent"></div>
+            </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <RankingBox titulo="🛑 Desarmes" dados={dados.defesa.desarmes} cor="neutral" />
               <RankingBox titulo="✂️ Interceptações" dados={dados.defesa.interceptacoes} cor="neutral" />
-              <RankingBox titulo="🛡️ Cortes (Rebatidas)" dados={dados.defesa.cortes} cor="neutral" />
+              <RankingBox titulo="🛡️ Rebatidas" dados={dados.defesa.cortes} cor="neutral" />
             </div>
           </div>
 
           {/* Rodapé da Imagem */}
-          <div className="mt-8 pt-4 border-t border-red-900/30 text-center relative z-10 flex flex-col items-center">
-             <p className="text-neutral-500 text-xs uppercase tracking-widest font-semibold flex items-center gap-1">
-               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-               Sistema Autônomo Online • {new Date().getFullYear()}
+          <div className="mt-20 pt-12 border-t border-white/5 text-center relative z-10 flex flex-col items-center gap-6">
+             <div className="flex items-center gap-10">
+                <div className="flex items-center gap-3">
+                  <PieChart size={18} className="text-red-500" />
+                  <span className="text-[11px] font-black text-neutral-500 uppercase tracking-[0.3em]">Data Analytics</span>
+                </div>
+                <div className="w-1.5 h-1.5 bg-white/10 rounded-full"></div>
+                <div className="flex items-center gap-3">
+                  <Settings2 size={18} className="text-red-500" />
+                  <span className="text-[11px] font-black text-neutral-500 uppercase tracking-[0.3em]">AI Powered Engine</span>
+                </div>
+             </div>
+             <p className="text-neutral-600 text-[10px] uppercase tracking-[0.5em] font-black flex items-center gap-3">
+               <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)] animate-pulse"></span>
+               AnalisAI Intelligence System • v2.5 • {new Date().getFullYear()}
              </p>
           </div>
         </div>
       ) : (
-        <div className="w-full max-w-4xl bg-neutral-900/50 p-20 rounded-3xl border border-white/5 text-center">
-          <p className="text-neutral-500 font-medium">Selecione uma equipe e competição para visualizar os dados.</p>
+        <div className="w-full max-w-6xl bg-neutral-900/20 p-40 rounded-[4rem] border border-dashed border-white/10 text-center backdrop-blur-sm flex flex-col items-center gap-8">
+          <div className="w-24 h-24 rounded-full bg-neutral-800/50 flex items-center justify-center border border-white/5 animate-pulse">
+            <Search size={48} className="text-neutral-600" />
+          </div>
+          <div className="flex flex-col gap-3">
+            <p className="text-neutral-400 font-black uppercase text-sm tracking-[0.4em]">Aguardando Seleção de Dados</p>
+            <p className="text-neutral-600 text-base max-w-md">Selecione uma equipe e competição no menu superior para processar o relatório de inteligência avançada.</p>
+          </div>
         </div>
       )}
       </>
       ) : (
         /* SEÇÃO: ALAVANCAGEM */
-        <div className="w-full max-w-4xl bg-neutral-900 rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
-          <div className="relative">
-            <Alavancagem />
-          </div>
+        <div className="w-full max-w-6xl bg-[#050505] rounded-[4rem] border border-white/5 shadow-[0_60px_120px_rgba(0,0,0,1)] overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-red-600/5 to-transparent pointer-events-none"></div>
+          <Alavancagem />
         </div>
       )}
 
+      {/* Footer do App */}
+      <footer className="w-full max-w-6xl mt-16 mb-12 flex flex-col md:flex-row justify-between items-center gap-8 px-10">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-red-600/10 flex items-center justify-center border border-red-500/20 shadow-lg">
+            <ShieldCheck size={20} className="text-red-500" />
+          </div>
+          <p className="text-[11px] font-black text-neutral-600 uppercase tracking-[0.25em]">Plataforma de Inteligência Auditada</p>
+        </div>
+        
+        <div className="flex items-center gap-10">
+          <a href="#" className="text-[11px] font-black text-neutral-500 hover:text-red-500 transition-colors uppercase tracking-[0.25em] flex items-center gap-2">
+            Suporte <ExternalLink size={14} />
+          </a>
+          <a href="#" className="text-[11px] font-black text-neutral-500 hover:text-red-500 transition-colors uppercase tracking-[0.25em] flex items-center gap-2">
+            Termos <ExternalLink size={14} />
+          </a>
+          <div className="px-6 py-2 rounded-full bg-neutral-900 border border-white/5 text-[10px] font-black text-red-500 uppercase tracking-[0.3em] shadow-inner">
+            Enterprise v2.5
+          </div>
+        </div>
+      </footer>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #050505; }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        select { background-image: none !important; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2a2a2a; }
+      `}} />
     </div>
   );
 }

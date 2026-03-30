@@ -72,11 +72,55 @@ async function startServer() {
       seedData(team.id, comp.toUpperCase().replace(/\s/g, '_'), generateMockData(team.name, `🏆 ${comp} 2026`));
     });
   });
+
+  // Função para sincronizar dados do GitHub (README.md)
+  const syncFromGitHub = async () => {
+    const githubUrl = process.env.GITHUB_README_URL;
+    if (!githubUrl) {
+      console.log("GITHUB_README_URL não configurada. Pulando sincronização externa.");
+      return;
+    }
+
+    try {
+      console.log(`Sincronizando dados de: ${githubUrl}`);
+      const response = await fetch(githubUrl);
+      if (!response.ok) throw new Error("Falha ao baixar README do GitHub");
+      const content = await response.text();
+      
+      // Lógica simples de parsing (exemplo: busca por blocos JSON ou tabelas)
+      // Aqui assumimos que o README pode ter blocos de código com JSON para novos scouts
+      const jsonBlocks = content.match(/```json([\s\S]*?)```/g);
+      if (jsonBlocks) {
+        jsonBlocks.forEach(block => {
+          try {
+            const jsonStr = block.replace(/```json|```/g, "").trim();
+            const data = JSON.parse(jsonStr);
+            if (data.teamId && data.compId && data.scoutData) {
+              seedData(data.teamId, data.compId, data.scoutData);
+              console.log(`Dados sincronizados para: ${data.teamId} - ${data.compId}`);
+            }
+          } catch (e) {
+            console.error("Erro ao processar bloco JSON do README:", e);
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Erro na sincronização com GitHub:", error);
+    }
+  };
+
+  // Tenta sincronizar no início
+  syncFromGitHub();
   
   const count = db.prepare("SELECT COUNT(*) as count FROM scouts").get() as { count: number };
   console.log(`Banco de dados pronto. Total de registros: ${count.count}`);
 
   // API Routes
+  app.get("/api/sync-github", async (req, res) => {
+    await syncFromGitHub();
+    const count = db.prepare("SELECT COUNT(*) as count FROM scouts").get() as { count: number };
+    res.json({ success: true, totalRecords: count.count });
+  });
   app.get("/api/competitions/:teamId", (req, res) => {
     const { teamId } = req.params;
     console.log(`API: Buscando competições para ${teamId}`);

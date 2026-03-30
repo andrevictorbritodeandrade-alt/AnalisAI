@@ -130,6 +130,26 @@ export default function App() {
   const [dados, setDados] = useState<any>(null);
 
   // Busca as competições disponíveis para a equipe
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const sincronizarGitHub = async () => {
+    setIsSyncing(true);
+    try {
+      const response = await fetch('/api/sync-github');
+      const data = await response.json();
+      if (data.success) {
+        // Recarrega os dados do time atual após sincronizar
+        await buscarCompeticoes(equipeAtual);
+        alert(`Sincronizado com sucesso! Total de registros no banco: ${data.totalRecords}`);
+      }
+    } catch (error) {
+      console.error("Erro ao sincronizar:", error);
+      alert("Erro ao sincronizar com o GitHub. Verifique a URL nos segredos.");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const buscarCompeticoes = async (teamId: string) => {
     console.log(`Buscando competições para: ${teamId}`);
     setLoading(true);
@@ -221,21 +241,32 @@ export default function App() {
         
         <Logo3D />
         
-        <div className="flex bg-black/60 rounded-[2rem] p-2 border border-white/5 shadow-inner mt-8 md:mt-0">
+        <div className="flex items-center gap-4 mt-8 md:mt-0">
           <button 
-            onClick={() => setActiveTab('scout')}
-            className={`flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 ${activeTab === 'scout' ? 'bg-gradient-to-b from-red-500 to-red-700 text-white shadow-[0_8px_25px_rgba(220,38,38,0.5)] scale-105' : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/5'}`}
+            onClick={sincronizarGitHub}
+            disabled={isSyncing}
+            className={`p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-500 group/sync ${isSyncing ? 'animate-spin opacity-50' : ''}`}
+            title="Sincronizar com GitHub"
           >
-            <BarChart3 size={18} />
-            Scout
+            <RefreshCw size={20} className="text-white/50 group-hover/sync:text-red-500 transition-colors" />
           </button>
-          <button 
-            onClick={() => setActiveTab('betmanager')}
-            className={`flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 ${activeTab === 'betmanager' ? 'bg-gradient-to-b from-red-500 to-red-700 text-white shadow-[0_8px_25px_rgba(220,38,38,0.5)] scale-105' : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/5'}`}
-          >
-            <CircleDollarSign size={18} />
-            Bet Manager
-          </button>
+
+          <div className="flex bg-black/60 rounded-[2rem] p-2 border border-white/5 shadow-inner">
+            <button 
+              onClick={() => setActiveTab('scout')}
+              className={`flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 ${activeTab === 'scout' ? 'bg-gradient-to-b from-red-500 to-red-700 text-white shadow-[0_8px_25px_rgba(220,38,38,0.5)] scale-105' : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/5'}`}
+            >
+              <BarChart3 size={18} />
+              Scout
+            </button>
+            <button 
+              onClick={() => setActiveTab('betmanager')}
+              className={`flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 ${activeTab === 'betmanager' ? 'bg-gradient-to-b from-red-500 to-red-700 text-white shadow-[0_8px_25px_rgba(220,38,38,0.5)] scale-105' : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/5'}`}
+            >
+              <CircleDollarSign size={18} />
+              Bet Manager
+            </button>
+          </div>
         </div>
       </div>
 

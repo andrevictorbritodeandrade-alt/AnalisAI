@@ -132,19 +132,21 @@ export default function App() {
   // Busca as competições disponíveis para a equipe
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const sincronizarGitHub = async () => {
+  const sincronizarCompeticoes = async () => {
     setIsSyncing(true);
     try {
-      const response = await fetch('/api/sync-github');
+      const response = await fetch('/api/sync-local', { method: 'POST' });
       const data = await response.json();
       if (data.success) {
         // Recarrega os dados do time atual após sincronizar
         await buscarCompeticoes(equipeAtual);
         alert(`Sincronizado com sucesso! Total de registros no banco: ${data.totalRecords}`);
+      } else {
+        alert(`Aviso: ${data.erro || 'Erro desconhecido'}`);
       }
     } catch (error) {
       console.error("Erro ao sincronizar:", error);
-      alert("Erro ao sincronizar com o GitHub. Verifique a URL nos segredos.");
+      alert("Erro ao sincronizar localmente. Verifique se o arquivo competitions/README.md existe.");
     } finally {
       setIsSyncing(false);
     }
@@ -243,10 +245,10 @@ export default function App() {
         
         <div className="flex items-center gap-4 mt-8 md:mt-0">
           <button 
-            onClick={sincronizarGitHub}
+            onClick={sincronizarCompeticoes}
             disabled={isSyncing}
             className={`p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-500 group/sync ${isSyncing ? 'animate-spin opacity-50' : ''}`}
-            title="Sincronizar com GitHub"
+            title="Sincronizar Competições"
           >
             <RefreshCw size={20} className="text-white/50 group-hover/sync:text-red-500 transition-colors" />
           </button>

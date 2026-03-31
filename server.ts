@@ -74,63 +74,86 @@ async function startServer() {
     });
   });
 
-  // Função para sincronizar dados (Lê localmente ou do GitHub se configurado)
-  const syncFromGitHub = async () => {
-    let content = "";
-    const localPath = path.join(__dirname, "competitions", "README.md");
-    const githubUrl = process.env.GITHUB_README_URL;
-
-    try {
-      // 1. Tenta ler localmente primeiro (dentro da pasta do app)
-      if (fs.existsSync(localPath)) {
-        console.log(`Lendo dados locais de: ${localPath}`);
-        content = fs.readFileSync(localPath, "utf-8");
-      } 
-      // 2. Se não houver local, tenta GitHub (se configurado)
-      else if (githubUrl) {
-        console.log(`Sincronizando dados remotos de: ${githubUrl}`);
-        const response = await fetch(githubUrl);
-        if (response.ok) content = await response.text();
-      }
-
-      if (!content) {
-        console.log("Nenhuma fonte de dados encontrada (Local ou GitHub).");
-        return;
-      }
-      
-      // Lógica de parsing para blocos JSON
-      const jsonBlocks = content.match(/```json([\s\S]*?)```/g);
-      if (jsonBlocks) {
-        jsonBlocks.forEach(block => {
-          try {
-            const jsonStr = block.replace(/```json|```/g, "").trim();
-            const data = JSON.parse(jsonStr);
-            if (data.teamId && data.compId && data.scoutData) {
-              seedData(data.teamId, data.compId, data.scoutData);
-              console.log(`Dados sincronizados para: ${data.teamId} - ${data.compId}`);
-            }
-          } catch (e) {
-            console.error("Erro ao processar bloco JSON:", e);
-          }
-        });
-      }
-    } catch (error) {
-      console.error("Erro na sincronização:", error);
-    }
-  };
-
   // Tenta sincronizar no início
-  syncFromGitHub();
+  const syncLocalOnStart = async () => {
+    try {
+      const localPath = path.resolve("./competitions/README.md");
+      if (fs.existsSync(localPath)) {
+        const conteudo = fs.readFileSync(localPath, "utf-8");
+        const regexJson = /```json([\s\S]*?)```/g;
+        let match;
+        while ((match = regexJson.exec(conteudo)) !== null) {
+          try {
+            const data = JSON.parse(match[1].trim());
+            if (data.teamId && data.compId && data.scoutData) {
+              seedData(data.teamId.toUpperCase(), data.compId.toUpperCase(), data.scoutData);
+            }
+          } catch (e) {}
+        }
+      }
+    } catch (e) {}
+  };
+  syncLocalOnStart();
   
   const count = db.prepare("SELECT COUNT(*) as count FROM scouts").get() as { count: number };
   console.log(`Banco de dados pronto. Total de registros: ${count.count}`);
 
   // API Routes
-  app.get("/api/sync-github", async (req, res) => {
-    await syncFromGitHub();
-    const count = db.prepare("SELECT COUNT(*) as count FROM scouts").get() as { count: number };
-    res.json({ success: true, totalRecords: count.count });
+  app.post("/api/sync-local", async (req, res) => {
+    try {
+      const localPath = path.resolve("./competitions/README.md");
+      console.log("📂 Lendo arquivo em:", localPath);
+      
+      if (!fs.existsSync(localPath)) {
+        return res.status(404).json({ erro: "Arquivo competitions/README.md não encontrado." });
+      }
+
+      const conteudo = fs.readFileSync(localPath, "utf-8");
+
+      // REGEX NINJA: Encontra blocos que começam com ```json e terminam com ```
+      const regexJson = /```json([\s\S]*?)```/g;
+      let blocosEncontrados = [];
+      let match;
+
+      while ((match = regexJson.exec(conteudo)) !== null) {
+        try {
+          const jsonPuro = JSON.parse(match[1].trim());
+          blocosEncontrados.push(jsonPuro);
+        } catch (e: any) {
+          console.error("❌ Bloco JSON malformado no README:", e.message);
+        }
+      }
+
+      if (blocosEncontrados.length === 0) {
+        return res.status(404).json({ erro: "Nenhum bloco de código JSON encontrado no README.md" });
+      }
+
+      // Atualiza o banco de dados SQLite
+      blocosEncontrados.forEach(bloco => {
+        if (bloco.teamId && bloco.compId && bloco.scoutData) {
+          seedData(bloco.teamId.toUpperCase(), bloco.compId.toUpperCase(), bloco.scoutData);
+        } else if (bloco.teamId && bloco.scoutData) {
+          // Fallback caso compId não esteja no root mas sim dentro de scoutData ou fixo
+          const compId = bloco.scoutData.campeonato?.toUpperCase().replace(/\s/g, '_') || 'GERAL';
+          seedData(bloco.teamId.toUpperCase(), compId, bloco.scoutData);
+        }
+      });
+
+      const count = db.prepare("SELECT COUNT(*) as count FROM scouts").get() as { count: number };
+      
+      res.json({ 
+        success: true,
+        mensagem: "Sincronização concluída!", 
+        timesAtualizados: blocosEncontrados.map(b => b.teamId),
+        totalRecords: count.count
+      });
+
+    } catch (error) {
+      console.error("Erro na sincronização:", error);
+      res.status(500).json({ erro: "Não foi possível ler a pasta competitions." });
+    }
   });
+
   app.get("/api/competitions/:teamId", (req, res) => {
     const { teamId } = req.params;
     console.log(`API: Buscando competições para ${teamId}`);

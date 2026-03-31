@@ -2,6 +2,7 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import Database from "better-sqlite3";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -73,22 +74,31 @@ async function startServer() {
     });
   });
 
-  // Função para sincronizar dados do GitHub (README.md)
+  // Função para sincronizar dados (Lê localmente ou do GitHub se configurado)
   const syncFromGitHub = async () => {
+    let content = "";
+    const localPath = path.join(__dirname, "competitions", "README.md");
     const githubUrl = process.env.GITHUB_README_URL;
-    if (!githubUrl) {
-      console.log("GITHUB_README_URL não configurada. Pulando sincronização externa.");
-      return;
-    }
 
     try {
-      console.log(`Sincronizando dados de: ${githubUrl}`);
-      const response = await fetch(githubUrl);
-      if (!response.ok) throw new Error("Falha ao baixar README do GitHub");
-      const content = await response.text();
+      // 1. Tenta ler localmente primeiro (dentro da pasta do app)
+      if (fs.existsSync(localPath)) {
+        console.log(`Lendo dados locais de: ${localPath}`);
+        content = fs.readFileSync(localPath, "utf-8");
+      } 
+      // 2. Se não houver local, tenta GitHub (se configurado)
+      else if (githubUrl) {
+        console.log(`Sincronizando dados remotos de: ${githubUrl}`);
+        const response = await fetch(githubUrl);
+        if (response.ok) content = await response.text();
+      }
+
+      if (!content) {
+        console.log("Nenhuma fonte de dados encontrada (Local ou GitHub).");
+        return;
+      }
       
-      // Lógica simples de parsing (exemplo: busca por blocos JSON ou tabelas)
-      // Aqui assumimos que o README pode ter blocos de código com JSON para novos scouts
+      // Lógica de parsing para blocos JSON
       const jsonBlocks = content.match(/```json([\s\S]*?)```/g);
       if (jsonBlocks) {
         jsonBlocks.forEach(block => {
@@ -100,12 +110,12 @@ async function startServer() {
               console.log(`Dados sincronizados para: ${data.teamId} - ${data.compId}`);
             }
           } catch (e) {
-            console.error("Erro ao processar bloco JSON do README:", e);
+            console.error("Erro ao processar bloco JSON:", e);
           }
         });
       }
     } catch (error) {
-      console.error("Erro na sincronização com GitHub:", error);
+      console.error("Erro na sincronização:", error);
     }
   };
 

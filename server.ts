@@ -4,6 +4,9 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,13 +22,18 @@ async function startServer() {
       team_id TEXT,
       competition_id TEXT,
       data TEXT,
+      last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (team_id, competition_id)
-    )
+    );
+    CREATE TABLE IF NOT EXISTS config (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    );
   `);
 
   // Seed data helper
   const seedData = (teamId: string, compId: string, data: any) => {
-    const stmt = db.prepare("INSERT OR REPLACE INTO scouts (team_id, competition_id, data) VALUES (?, ?, ?)");
+    const stmt = db.prepare("INSERT OR REPLACE INTO scouts (team_id, competition_id, data, last_updated) VALUES (?, ?, ?, CURRENT_TIMESTAMP)");
     stmt.run(teamId, compId, JSON.stringify(data));
   };
 
@@ -79,19 +87,28 @@ async function startServer() {
     try {
       const localPath = path.resolve("./competitions/README.md");
       if (fs.existsSync(localPath)) {
+        console.log("📂 [STARTUP] Lendo arquivo em:", localPath);
         const conteudo = fs.readFileSync(localPath, "utf-8");
         const regexJson = /```json([\s\S]*?)```/g;
         let match;
+        let count = 0;
         while ((match = regexJson.exec(conteudo)) !== null) {
           try {
             const data = JSON.parse(match[1].trim());
-            if (data.teamId && data.compId && data.scoutData) {
-              seedData(data.teamId.toUpperCase(), data.compId.toUpperCase(), data.scoutData);
+            if (data.teamId && data.scoutData) {
+              const compId = data.compId?.toUpperCase() || data.scoutData.campeonato?.toUpperCase().replace(/\s/g, '_') || 'GERAL';
+              seedData(data.teamId.toUpperCase(), compId, data.scoutData);
+              count++;
             }
           } catch (e) {}
         }
+        console.log(`✅ [STARTUP] Sincronização local concluída: ${count} blocos processados.`);
+      } else {
+        console.warn("⚠️ [STARTUP] Arquivo competitions/README.md não encontrado.");
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error("❌ [STARTUP] Erro na sincronização inicial:", e);
+    }
   };
   syncLocalOnStart();
   
@@ -99,6 +116,7 @@ async function startServer() {
   console.log(`Banco de dados pronto. Total de registros: ${count.count}`);
 
   // API Routes
+  app.use(express.json());
   app.post("/api/sync-local", async (req, res) => {
     try {
       const localPath = path.resolve("./competitions/README.md");
@@ -156,29 +174,71 @@ async function startServer() {
 
   app.get("/api/competitions/:teamId", (req, res) => {
     const { teamId } = req.params;
-    console.log(`API: Buscando competições para ${teamId}`);
-    const stmt = db.prepare("SELECT competition_id, data FROM scouts WHERE team_id = ?");
-    const rows = stmt.all(teamId) as { competition_id: string, data: string }[];
-    
-    console.log(`API: Encontradas ${rows.length} competições`);
-    const competitions = rows.map(row => ({
-      id: row.competition_id,
-      name: JSON.parse(row.data).campeonato
-    }));
-    
-    res.json(competitions);
+    try {
+      console.log(`🔍 [API] Buscando competições para: ${teamId}`);
+      const stmt = db.prepare("SELECT competition_id, data FROM scouts WHERE team_id = ?");
+      const rows = stmt.all(teamId.toUpperCase()) as { competition_id: string, data: string }[];
+      
+      console.log(`📊 [API] Encontradas ${rows.length} competições para ${teamId}`);
+      const competitions = rows.map(row => {
+        try {
+          const parsedData = JSON.parse(row.data);
+          return {
+            id: row.competition_id,
+            name: parsedData.campeonato || row.competition_id
+          };
+        } catch (e) {
+          return { id: row.competition_id, name: row.competition_id };
+        }
+      });
+      
+      res.json(competitions);
+    } catch (error) {
+      console.error(`❌ [API] Erro ao buscar competições para ${teamId}:`, error);
+      res.status(500).json({ error: "Erro interno ao buscar competições" });
+    }
   });
 
   app.get("/api/scouts/:teamId/:compId", (req, res) => {
     const { teamId, compId } = req.params;
-    const stmt = db.prepare("SELECT data FROM scouts WHERE team_id = ? AND competition_id = ?");
-    const row = stmt.get(teamId, compId) as { data: string } | undefined;
+    try {
+      console.log(`🔍 [API] Buscando scout: ${teamId} - ${compId}`);
+      const stmt = db.prepare("SELECT data FROM scouts WHERE team_id = ? AND competition_id = ?");
+      const row = stmt.get(teamId.toUpperCase(), compId.toUpperCase()) as { data: string } | undefined;
 
-    if (row) {
-      res.json(JSON.parse(row.data));
-    } else {
-      res.status(404).json({ error: "Data not found" });
+      if (row) {
+        res.json(JSON.parse(row.data));
+      } else {
+        console.warn(`⚠️ [API] Scout não encontrado: ${teamId} - ${compId}`);
+        res.status(404).json({ error: "Dados não encontrados" });
+      }
+    } catch (error) {
+      console.error(`❌ [API] Erro ao buscar scout ${teamId}/${compId}:`, error);
+      res.status(500).json({ error: "Erro interno ao buscar dados de scout" });
     }
+  });
+
+  app.post("/api/save-scout", (req, res) => {
+    const { teamId, compId, data } = req.body;
+    if (!teamId || !compId || !data) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+    seedData(teamId.toUpperCase(), compId.toUpperCase(), data);
+    res.json({ success: true });
+  });
+
+  app.get("/api/config/:key", (req, res) => {
+    const { key } = req.params;
+    const stmt = db.prepare("SELECT value FROM config WHERE key = ?");
+    const row = stmt.get(key) as { value: string } | undefined;
+    res.json({ value: row ? row.value : null });
+  });
+
+  app.post("/api/config", (req, res) => {
+    const { key, value } = req.body;
+    const stmt = db.prepare("INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)");
+    stmt.run(key, value);
+    res.json({ success: true });
   });
 
   // Vite middleware for development

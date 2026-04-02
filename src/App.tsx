@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import html2canvas from 'html2canvas';
+import { toJpeg } from 'html-to-image';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Trophy, 
   TrendingUp, 
@@ -18,9 +19,11 @@ import {
   Settings2,
   ExternalLink,
   Search,
-  Filter
+  Filter,
+  Clock
 } from 'lucide-react';
 import Alavancagem from './components/Alavancagem';
+import { EQUIPES_MONITORADAS, buscarDadosNaIA } from './services/geminiService';
 
 const CLUB_CRESTS: Record<string, string> = {
   FLAMENGO: "https://a.espncdn.com/i/teamlogos/soccer/500/819.png",
@@ -131,6 +134,8 @@ export default function App() {
 
   // Busca as competições disponíveis para a equipe
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isAiSyncing, setIsAiSyncing] = useState(false);
+  const [syncSuccess, setSyncSuccess] = useState(false);
 
   const sincronizarCompeticoes = async () => {
     setIsSyncing(true);
@@ -149,6 +154,45 @@ export default function App() {
       alert("Erro ao sincronizar localmente. Verifique se o arquivo competitions/README.md existe.");
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const sincronizarIA = async () => {
+    setIsAiSyncing(true);
+    let count = 0;
+    try {
+      console.log("🚀 Iniciando sincronização via IA no frontend...");
+      for (const equipe of EQUIPES_MONITORADAS) {
+        const novosDados = await buscarDadosNaIA(equipe);
+        if (novosDados) {
+          const compId = novosDados.campeonato?.toUpperCase().replace(/\s/g, '_') || 'GERAL';
+          await fetch('/api/save-scout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ teamId: equipe, compId, data: novosDados })
+          });
+          count++;
+        }
+        // Delay para evitar rate limit
+        await new Promise(r => setTimeout(r, 1000));
+      }
+      
+      // Salva a data da última sincronização
+      await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'last_ai_sync', value: new Date().toISOString() })
+      });
+
+      alert(`Sincronização via IA concluída! ${count} equipes atualizadas.`);
+      setSyncSuccess(true);
+      setTimeout(() => setSyncSuccess(false), 5000);
+      await buscarCompeticoes(equipeAtual);
+    } catch (error) {
+      console.error("Erro ao sincronizar IA:", error);
+      alert("Erro durante a sincronização via IA.");
+    } finally {
+      setIsAiSyncing(false);
     }
   };
 
@@ -198,6 +242,25 @@ export default function App() {
   useEffect(() => {
     document.body.style.overflowX = 'hidden';
     buscarCompeticoes('FLAMENGO');
+
+    // Verifica se precisa de sincronização automática (semanal)
+    const checkAutoSync = async () => {
+      try {
+        const res = await fetch('/api/config/last_ai_sync');
+        const { value } = await res.json();
+        const lastSync = value ? new Date(value) : null;
+        const now = new Date();
+        
+        // Se nunca sincronizou ou faz mais de 7 dias
+        if (!lastSync || (now.getTime() - lastSync.getTime() > 7 * 24 * 60 * 60 * 1000)) {
+          console.log("⏰ Sincronização semanal necessária...");
+          // Opcional: Notificar o usuário ou fazer automático
+          // Por segurança, vamos apenas sugerir ou fazer se o usuário estiver ocioso
+        }
+      } catch (e) {}
+    };
+    checkAutoSync();
+
     return () => {
       document.body.style.overflowX = '';
     };
@@ -217,15 +280,17 @@ export default function App() {
     if (!painelRef.current) return;
     setLoading(true);
     try {
-      const canvas = await html2canvas(painelRef.current, {
+      const dataUrl = await toJpeg(painelRef.current, {
         backgroundColor: '#0a0a0a',
-        scale: 2,
-        useCORS: true,
-        logging: false,
+        pixelRatio: 2,
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left'
+        }
       });
       const link = document.createElement('a');
       link.download = `analisai-${equipeAtual.toLowerCase()}-${new Date().getTime()}.jpg`;
-      link.href = canvas.toDataURL('image/jpeg', 0.9);
+      link.href = dataUrl;
       link.click();
     } catch (err) {
       console.error("Erro ao exportar:", err);
@@ -235,13 +300,26 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] p-4 md:p-8 font-sans text-white flex flex-col items-center selection:bg-red-500/30">
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8 font-sans text-white flex flex-col items-center selection:bg-red-500/30">
       
       {/* HEADER E NAVEGAÇÃO PRINCIPAL */}
-      <div className="w-full max-w-6xl mb-10 flex flex-col md:flex-row justify-between items-center bg-neutral-900/40 p-8 rounded-[3rem] border border-white/5 shadow-[0_30px_60px_rgba(0,0,0,0.8)] backdrop-blur-xl relative overflow-hidden group">
+      <div className="w-full max-w-6xl mb-10 flex flex-col md:flex-row justify-between items-center bg-slate-900/40 p-8 rounded-[3rem] border border-slate-800 shadow-[0_30px_60px_rgba(0,0,0,0.8)] backdrop-blur-xl relative overflow-hidden group">
         <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
         
         <Logo3D />
+        
+        <AnimatePresence>
+          {syncSuccess && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="absolute top-full mt-4 bg-emerald-500 text-white px-6 py-2 rounded-full font-black uppercase text-[10px] tracking-widest shadow-lg shadow-emerald-500/20 z-50"
+            >
+              Sincronização Concluída com Sucesso!
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         <div className="flex items-center gap-4 mt-8 md:mt-0">
           <button 
@@ -251,6 +329,15 @@ export default function App() {
             title="Sincronizar Competições"
           >
             <RefreshCw size={20} className="text-white/50 group-hover/sync:text-red-500 transition-colors" />
+          </button>
+
+          <button 
+            onClick={sincronizarIA}
+            disabled={isAiSyncing}
+            className={`p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-500 group/sync ${isAiSyncing ? 'animate-spin opacity-50' : ''}`}
+            title="Sincronizar via IA (Gemini)"
+          >
+            <Zap size={20} className={`text-white/50 group-hover/sync:text-amber-500 transition-colors ${isAiSyncing ? 'animate-pulse' : ''}`} />
           </button>
 
           <div className="flex bg-black/60 rounded-[2rem] p-2 border border-white/5 shadow-inner">
@@ -527,15 +614,39 @@ export default function App() {
           </div>
         </div>
       ) : (
-        <div className="w-full max-w-6xl bg-neutral-900/20 p-40 rounded-[4rem] border border-dashed border-white/10 text-center backdrop-blur-sm flex flex-col items-center gap-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-6xl bg-neutral-900/20 p-40 rounded-[4rem] border border-dashed border-white/10 text-center backdrop-blur-sm flex flex-col items-center gap-8"
+        >
           <div className="w-24 h-24 rounded-full bg-neutral-800/50 flex items-center justify-center border border-white/5 animate-pulse">
             <Search size={48} className="text-neutral-600" />
           </div>
           <div className="flex flex-col gap-3">
             <p className="text-neutral-400 font-black uppercase text-sm tracking-[0.4em]">Aguardando Seleção de Dados</p>
             <p className="text-neutral-600 text-base max-w-md">Selecione uma equipe e competição no menu superior para processar o relatório de inteligência avançada.</p>
+            
+            {competicoesDisponiveis.length === 0 && (
+              <div className="mt-12 p-10 bg-red-600/5 rounded-[3rem] border border-red-500/10 backdrop-blur-xl">
+                <p className="text-red-400 font-black uppercase text-xs tracking-[0.3em] mb-6">Nenhum dado encontrado para {equipeAtual}</p>
+                <div className="flex flex-wrap justify-center gap-6">
+                  <button 
+                    onClick={sincronizarCompeticoes}
+                    className="px-8 py-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-3"
+                  >
+                    <RefreshCw size={16} /> Sincronizar Local
+                  </button>
+                  <button 
+                    onClick={sincronizarIA}
+                    className="px-8 py-4 bg-red-600/20 hover:bg-red-600/30 text-red-500 rounded-2xl border border-red-500/20 transition-all text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-3"
+                  >
+                    <Zap size={16} /> Sincronizar via IA
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        </motion.div>
       )}
       </>
       ) : (

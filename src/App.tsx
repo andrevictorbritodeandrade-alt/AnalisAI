@@ -25,6 +25,8 @@ import {
 import Alavancagem from './components/Alavancagem';
 import { EQUIPES_MONITORADAS, buscarDadosNaIA } from './services/geminiService';
 
+import { theme } from './theme';
+
 const CLUB_CRESTS: Record<string, string> = {
   FLAMENGO: "https://a.espncdn.com/i/teamlogos/soccer/500/819.png",
   PALMEIRAS: "https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg",
@@ -35,31 +37,20 @@ const CLUB_CRESTS: Record<string, string> = {
   PSG: "https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg",
 };
 
-// Componente visual do Logo 3D
-const Logo3D = () => (
-  <div className="relative group cursor-pointer select-none">
-    <div className="flex items-center gap-4">
-      <div className="relative w-14 h-14 flex items-center justify-center transform-gpu transition-all group-hover:scale-110 group-hover:rotate-3 duration-500">
-        {/* Camadas de sombra para efeito 3D profundo */}
-        <div className="absolute inset-0 bg-red-600 rounded-2xl rotate-6 opacity-20 blur-md"></div>
-        <div className="absolute inset-0 bg-red-500 rounded-2xl -rotate-3 opacity-40"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-red-400 via-red-600 to-red-800 rounded-2xl shadow-[0_15px_30px_rgba(220,38,38,0.5),inset_0_2px_4px_rgba(255,255,255,0.4)] flex items-center justify-center border border-red-400/30">
-          <TrendingUp className="text-white drop-shadow-[0_3px_3px_rgba(0,0,0,0.6)]" size={32} strokeWidth={3} />
+// Componente visual do Logo Premium (Analisai)
+const LogoPremium = () => (
+  <div className="flex flex-col items-center justify-center gap-2">
+    <div className="relative flex items-center justify-center p-1 bg-gradient-to-b from-[#E2C275] via-[#D4AF37] to-[#B8860B] rounded-[2rem] shadow-[0_10px_30px_rgba(184,134,11,0.4)]">
+      <div className="bg-[#0A0A0A] rounded-[1.8rem] px-8 py-4 flex items-center gap-4 border border-[#E2C275]/20">
+        <div className="w-12 h-12 bg-gradient-to-br from-[#E2C275] to-[#B8860B] rounded-xl flex items-center justify-center shadow-inner">
+          <TrendingUp className="text-[#0A0A0A]" size={28} strokeWidth={3} />
         </div>
-        {/* Brilho animado */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-      </div>
-      <div className="flex flex-col leading-none">
-        <h1 className="text-4xl font-black tracking-tighter uppercase italic flex items-center gap-2">
-          <span className="text-white drop-shadow-[0_2px_0_#991b1b,0_4px_0_#7f1d1d,0_8px_12px_rgba(0,0,0,0.6)]">ANALIS</span>
-          <span className="text-red-500 drop-shadow-[0_2px_0_#7f1d1d,0_4px_0_#450a0a,0_8px_12px_rgba(0,0,0,0.6)]">AI</span>
-          <div className="flex gap-1.5 ml-1">
-            <div className="w-5 h-5 bg-red-600 rounded-full shadow-[0_0_20px_rgba(220,38,38,0.6)] border border-red-400/30"></div>
-            <div className="w-5 h-5 bg-red-600 rounded-full shadow-[0_0_20px_rgba(220,38,38,0.6)] border border-red-400/30"></div>
-          </div>
-        </h1>
-        <div className="flex items-center gap-2 mt-1.5">
-          <span className="text-[11px] font-black text-red-500/90 uppercase tracking-[0.35em]">Premium Intelligence</span>
+        <div className="flex flex-col leading-none">
+          <h1 className="text-4xl font-black tracking-[-0.05em] uppercase italic flex items-center gap-1" style={{ fontFamily: theme.fonts.display }}>
+            <span className="text-transparent bg-clip-text bg-gradient-to-b from-[#F5E6AD] via-[#D4AF37] to-[#B8860B] drop-shadow-[0_2px_10px_rgba(212,175,55,0.5)]">ANALIS</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-b from-[#F5E6AD] via-[#D4AF37] to-[#B8860B] drop-shadow-[0_2px_10px_rgba(212,175,55,0.5)]">AI</span>
+          </h1>
+          <span className="text-[10px] font-bold text-[#D4AF37]/80 uppercase tracking-[0.4em] mt-1">Análise e alavancagem esportiva</span>
         </div>
       </div>
     </div>
@@ -68,30 +59,60 @@ const Logo3D = () => (
 
 // Componente visual do "Selo de Aposta Recomendada"
 const SeloAposta = ({ texto }: { texto: string }) => (
-  <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white text-[10px] font-black px-3 py-1.5 rounded-xl uppercase tracking-wider animate-pulse shadow-[0_4px_15px_rgba(16,185,129,0.4)] border border-emerald-400/30">
-    <Zap size={12} className="fill-white" /> {texto}
+  <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0A0A0A] text-[10px] font-black px-3 py-1.5 rounded-xl uppercase tracking-wider animate-pulse shadow-[0_4px_15px_rgba(212,175,55,0.4)] border border-[#E2C275]/30">
+    <Zap size={12} className="fill-[#0A0A0A]" /> {texto}
   </span>
 );
 
 const Menu = ({ onSelect }: { onSelect: (tab: 'scout' | 'betmanager') => void }) => (
-  <div className="min-h-screen bg-slate-950 p-4 md:p-8 font-sans text-white flex flex-col items-center justify-center">
-    <Logo3D />
-    <h2 className="text-2xl font-black text-white mt-8 mb-12 uppercase tracking-widest">Escolha o Módulo</h2>
-    <div className="flex flex-col gap-6 w-full max-w-md">
-      <button 
-        onClick={() => onSelect('scout')}
-        className="bg-neutral-900/40 p-8 rounded-[2rem] border border-white/5 hover:border-red-500/30 transition-all flex items-center gap-6 group"
-      >
-        <BarChart3 size={40} className="text-red-500 group-hover:scale-110 transition-transform" />
-        <span className="text-xl font-black uppercase tracking-widest">Analisai (Scout)</span>
-      </button>
-      <button 
-        onClick={() => onSelect('betmanager')}
-        className="bg-neutral-900/40 p-8 rounded-[2rem] border border-white/5 hover:border-red-500/30 transition-all flex items-center gap-6 group"
-      >
-        <CircleDollarSign size={40} className="text-emerald-500 group-hover:scale-110 transition-transform" />
-        <span className="text-xl font-black uppercase tracking-widest">Bet Manager</span>
-      </button>
+  <div className="min-h-screen relative overflow-hidden font-sans text-white flex flex-col items-center justify-center p-6">
+    {/* Background Image with Overlay */}
+    <div className="absolute inset-0 z-0">
+      <img 
+        src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=2070&auto=format&fit=crop" 
+        className="w-full h-full object-cover"
+        alt="Stadium Background"
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-[#1a1405]/80 to-black/90"></div>
+      <div className="absolute inset-0 backdrop-blur-[2px]"></div>
+    </div>
+
+    <div className="relative z-10 flex flex-col items-center w-full max-w-2xl">
+      <LogoPremium />
+      
+      <h2 className="text-xl font-black text-[#D4AF37] mt-16 mb-12 uppercase tracking-[0.4em] drop-shadow-lg" style={{ fontFamily: theme.fonts.sans }}>
+        Escolha o Módulo
+      </h2>
+
+      <div className="flex flex-col gap-8 w-full">
+        <button 
+          onClick={() => onSelect('scout')}
+          className="group relative bg-[#0A0A0A]/90 p-10 rounded-[2.5rem] border border-[#D4AF37]/30 hover:border-[#D4AF37] transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center gap-8 overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="w-16 h-16 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:scale-110 transition-transform duration-500">
+            <BarChart3 size={36} className="text-[#D4AF37]" />
+          </div>
+          <span className="text-2xl font-black uppercase tracking-[0.3em] text-[#D4AF37] group-hover:text-[#F5E6AD] transition-colors">SCOUTS</span>
+          <div className="ml-auto opacity-20 group-hover:opacity-100 transition-opacity">
+            <Zap size={24} className="text-[#D4AF37]" />
+          </div>
+        </button>
+
+        <button 
+          onClick={() => onSelect('betmanager')}
+          className="group relative bg-[#0A0A0A]/90 p-10 rounded-[2.5rem] border border-[#D4AF37]/30 hover:border-[#D4AF37] transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center gap-8 overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="w-16 h-16 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:scale-110 transition-transform duration-500">
+            <CircleDollarSign size={36} className="text-[#D4AF37]" />
+          </div>
+          <span className="text-2xl font-black uppercase tracking-[0.3em] text-[#D4AF37] group-hover:text-[#F5E6AD] transition-colors">BET MANAGER</span>
+          <div className="ml-auto opacity-20 group-hover:opacity-100 transition-opacity">
+            <Zap size={24} className="text-[#D4AF37]" />
+          </div>
+        </button>
+      </div>
     </div>
   </div>
 );
@@ -337,7 +358,7 @@ export default function App() {
       <div className="w-full max-w-6xl mb-10 flex flex-col md:flex-row justify-between items-center bg-slate-900/40 p-8 rounded-[3rem] border border-slate-800 shadow-[0_30px_60px_rgba(0,0,0,0.8)] backdrop-blur-xl relative overflow-hidden group">
         <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
         
-        <Logo3D />
+        <LogoPremium />
         
         <AnimatePresence>
           {syncSuccess && (
@@ -371,11 +392,11 @@ export default function App() {
             <Zap size={20} className={`text-white/50 group-hover/sync:text-amber-500 transition-colors ${isAiSyncing ? 'animate-pulse' : ''}`} />
           </button>
 
-          <div className="flex bg-black/60 rounded-[2rem] p-2 border border-white/5 shadow-inner">
+          <div className="flex bg-black/60 rounded-[2rem] p-2 border border-[#D4AF37]/20 shadow-inner">
             {activeTab === 'scout' ? (
               <button 
                 onClick={() => setActiveTab('scout')}
-                className="flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 bg-gradient-to-b from-red-500 to-red-700 text-white shadow-[0_8px_25px_rgba(220,38,38,0.5)] scale-105"
+                className="flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 bg-gradient-to-b from-[#D4AF37] to-[#B8860B] text-[#0A0A0A] shadow-[0_8px_25px_rgba(212,175,55,0.3)] scale-105"
               >
                 <BarChart3 size={18} />
                 Scout
@@ -383,7 +404,7 @@ export default function App() {
             ) : (
               <button 
                 onClick={() => setActiveTab('betmanager')}
-                className="flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 bg-gradient-to-b from-red-500 to-red-700 text-white shadow-[0_8px_25px_rgba(220,38,38,0.5)] scale-105"
+                className="flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 bg-gradient-to-b from-[#D4AF37] to-[#B8860B] text-[#0A0A0A] shadow-[0_8px_25px_rgba(212,175,55,0.3)] scale-105"
               >
                 <CircleDollarSign size={18} />
                 Bet Manager
@@ -396,12 +417,12 @@ export default function App() {
       {activeTab === 'scout' ? (
         <>
           {/* CONTROLES DE EQUIPE E COMPETIÇÃO */}
-          <div className="w-full max-w-6xl mb-12 flex flex-col items-center gap-8 bg-neutral-900/20 p-8 rounded-[2.5rem] border border-white/5 backdrop-blur-md">
+          <div className="w-full max-w-6xl mb-12 flex flex-col items-center gap-8 bg-[#0A0A0A]/40 p-8 rounded-[2.5rem] border border-[#D4AF37]/20 backdrop-blur-md">
             <div className="flex flex-col md:flex-row gap-6 w-full justify-center">
               <div className="relative group min-w-[280px] flex-1 md:flex-none">
-                <label className="absolute -top-3 left-6 bg-[#050505] px-3 text-[10px] font-black text-red-500 uppercase tracking-[0.3em] z-10">Equipe Selecionada</label>
+                <label className="absolute -top-3 left-6 bg-[#050505] px-3 text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.3em] z-10">Equipe Selecionada</label>
                 <select 
-                  className="appearance-none bg-black/40 border border-white/10 text-white font-black text-base rounded-2xl focus:ring-2 focus:ring-red-500/50 focus:border-red-500 block px-6 py-5 pr-14 outline-none transition-all hover:border-red-500/40 cursor-pointer w-full shadow-inner"
+                  className="appearance-none bg-black/40 border border-[#D4AF37]/20 text-white font-black text-base rounded-2xl focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] block px-6 py-5 pr-14 outline-none transition-all hover:border-[#D4AF37]/40 cursor-pointer w-full shadow-inner"
                   onChange={(e) => handleTeamChange(e.target.value)}
                   value={equipeAtual}
                 >
@@ -417,15 +438,15 @@ export default function App() {
                     <option value="PSG">PSG</option>
                   </optgroup>
                 </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-red-500/60 group-hover:text-red-500 transition-colors">
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-[#D4AF37]/60 group-hover:text-[#D4AF37] transition-colors">
                   <ChevronDown size={22} />
                 </div>
               </div>
 
               <div className="relative group min-w-[280px] flex-1 md:flex-none">
-                <label className="absolute -top-3 left-6 bg-[#050505] px-3 text-[10px] font-black text-red-500 uppercase tracking-[0.3em] z-10">Competição Ativa</label>
+                <label className="absolute -top-3 left-6 bg-[#050505] px-3 text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.3em] z-10">Competição Ativa</label>
                 <select 
-                  className="appearance-none bg-black/40 border border-white/10 text-white font-black text-base rounded-2xl focus:ring-2 focus:ring-red-500/50 focus:border-red-500 block px-6 py-5 pr-14 outline-none transition-all hover:border-red-500/40 cursor-pointer w-full shadow-inner disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="appearance-none bg-black/40 border border-[#D4AF37]/20 text-white font-black text-base rounded-2xl focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] block px-6 py-5 pr-14 outline-none transition-all hover:border-[#D4AF37]/40 cursor-pointer w-full shadow-inner disabled:opacity-50 disabled:cursor-not-allowed"
                   onChange={(e) => handleCompChange(e.target.value)}
                   value={competicaoAtual}
                   disabled={competicoesDisponiveis.length === 0 || loading}
@@ -440,7 +461,7 @@ export default function App() {
                     ))
                   )}
                 </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-red-500/60 group-hover:text-red-500 transition-colors">
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-[#D4AF37]/60 group-hover:text-[#D4AF37] transition-colors">
                   {loading ? (
                     <RefreshCw size={22} className="animate-spin" />
                   ) : (
@@ -454,7 +475,7 @@ export default function App() {
             <button 
               onClick={() => buscarDadosScout(equipeAtual, competicaoAtual)}
               disabled={loading || !competicaoAtual}
-              className={`font-black uppercase text-[12px] tracking-[0.25em] py-5 px-10 rounded-2xl transition-all flex items-center gap-4 shadow-2xl active:scale-95 ${loading ? 'bg-red-900/20 text-red-500/50 cursor-not-allowed border border-red-900/30' : 'bg-gradient-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white shadow-red-900/40'}`}
+              className={`font-black uppercase text-[12px] tracking-[0.25em] py-5 px-10 rounded-2xl transition-all flex items-center gap-4 shadow-2xl active:scale-95 ${loading ? 'bg-[#D4AF37]/20 text-[#D4AF37]/50 cursor-not-allowed border border-[#D4AF37]/30' : 'bg-gradient-to-b from-[#D4AF37] to-[#B8860B] hover:from-[#E2C275] hover:to-[#D4AF37] text-[#0A0A0A] shadow-[#D4AF37]/20'}`}
             >
               {loading ? (
                 <RefreshCw className="animate-spin" size={20} />
@@ -469,7 +490,7 @@ export default function App() {
               disabled={loading || !dados}
               className="bg-neutral-800/50 hover:bg-neutral-800 border border-white/5 text-white font-black uppercase text-[12px] tracking-[0.25em] py-5 px-10 rounded-2xl transition-all flex items-center gap-4 disabled:opacity-30 active:scale-95 shadow-xl"
             >
-              <Download size={20} className="text-red-500" />
+              <Download size={20} className="text-[#D4AF37]" />
               Exportar Scout
             </button>
           </div>
@@ -480,18 +501,18 @@ export default function App() {
         <div 
           id="scout-panel"
           ref={painelRef}
-          className="w-full max-w-6xl bg-[#0a0a0a] p-10 md:p-16 rounded-[4rem] shadow-[0_60px_120px_rgba(0,0,0,0.9)] border border-white/5 relative overflow-hidden"
+          className="w-full max-w-6xl bg-[#0a0a0a] p-10 md:p-16 rounded-[4rem] shadow-[0_60px_120px_rgba(0,0,0,0.9)] border border-[#D4AF37]/20 relative overflow-hidden"
         >
           {/* Efeitos de Fundo Premium */}
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-red-600/15 via-transparent to-transparent pointer-events-none"></div>
-          <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-red-900/10 via-transparent to-transparent pointer-events-none"></div>
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-[#D4AF37]/10 via-transparent to-transparent pointer-events-none"></div>
+          <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-[#B8860B]/5 via-transparent to-transparent pointer-events-none"></div>
           <div className="absolute inset-0 opacity-[0.04] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
 
           {/* CABEÇALHO DO CARD */}
-          <div className="text-center mb-16 border-b border-white/5 pb-14 relative z-10">
+          <div className="text-center mb-16 border-b border-[#D4AF37]/10 pb-14 relative z-10">
             <div className="flex flex-col items-center justify-center gap-8">
               <div className="relative group">
-                <div className="absolute inset-0 bg-red-600 rounded-full blur-3xl opacity-30 group-hover:opacity-50 transition-opacity duration-1000"></div>
+                <div className="absolute inset-0 bg-[#D4AF37] rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity duration-1000"></div>
                 {CLUB_CRESTS[equipeAtual] && (
                   <img 
                     src={CLUB_CRESTS[equipeAtual]} 
@@ -502,13 +523,13 @@ export default function App() {
                 )}
               </div>
               <div className="flex flex-col gap-3">
-                <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-white drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)] uppercase italic">
+                <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#F5E6AD] via-[#D4AF37] to-[#B8860B] drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)] uppercase italic" style={{ fontFamily: theme.fonts.display }}>
                   {equipeAtual}
                 </h2>
                 <div className="flex items-center justify-center gap-4">
-                  <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-red-600"></div>
-                  <p className="text-red-500 font-black text-base tracking-[0.5em] uppercase">{dados.campeonato}</p>
-                  <div className="h-[2px] w-12 bg-gradient-to-l from-transparent to-red-600"></div>
+                  <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-[#D4AF37]"></div>
+                  <p className="text-[#D4AF37] font-black text-base tracking-[0.5em] uppercase">{dados.campeonato}</p>
+                  <div className="h-[2px] w-12 bg-gradient-to-l from-transparent to-[#D4AF37]"></div>
                 </div>
               </div>
             </div>
@@ -517,28 +538,28 @@ export default function App() {
           {/* SEÇÃO 1: MÉDIAS GERAIS */}
           <div className="mb-16 relative z-10">
             <div className="flex items-center gap-6 mb-10">
-              <div className="w-14 h-14 rounded-2xl bg-red-600/20 flex items-center justify-center border border-red-500/40 shadow-lg">
-                <LayoutGrid className="text-red-500" size={28} />
+              <div className="w-14 h-14 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 shadow-lg">
+                <LayoutGrid className="text-[#D4AF37]" size={28} />
               </div>
               <h3 className="text-3xl font-black uppercase tracking-tighter text-white italic">
-                Performance <span className="text-red-500">Analítica</span>
+                Performance <span className="text-[#D4AF37]">Analítica</span>
               </h3>
-              <div className="flex-grow h-[1px] bg-gradient-to-r from-white/10 via-white/5 to-transparent"></div>
+              <div className="flex-grow h-[1px] bg-gradient-to-r from-[#D4AF37]/20 via-[#D4AF37]/5 to-transparent"></div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               {/* Tabela Ataque */}
-              <div className="bg-neutral-900/40 rounded-[3rem] p-10 border border-white/5 shadow-2xl backdrop-blur-md relative overflow-hidden group">
+              <div className="bg-neutral-900/40 rounded-[3rem] p-10 border border-[#D4AF37]/10 shadow-2xl backdrop-blur-md relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-15 transition-all duration-700 transform group-hover:scale-125">
-                  <Target size={120} />
+                  <Target size={120} className="text-[#D4AF37]" />
                 </div>
-                <h4 className="text-red-400 font-black text-sm uppercase tracking-[0.25em] mb-10 flex items-center gap-4 border-b border-white/5 pb-6">
-                  <Target size={22} className="text-red-500" /> Ofensividade & Precisão
+                <h4 className="text-[#D4AF37] font-black text-sm uppercase tracking-[0.25em] mb-10 flex items-center gap-4 border-b border-[#D4AF37]/10 pb-6">
+                  <Target size={22} className="text-[#D4AF37]" /> Ofensividade & Precisão
                 </h4>
                 <div className="space-y-7">
                   <div className="flex justify-between items-center group/row">
                     <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Gols marcados</span>
-                    <span className="font-black text-3xl text-white bg-red-600/10 px-6 py-2 rounded-2xl border border-red-500/20 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">{dados.medias.gols}</span>
+                    <span className="font-black text-3xl text-[#0A0A0A] bg-gradient-to-b from-[#D4AF37] to-[#B8860B] px-6 py-2 rounded-2xl border border-[#E2C275]/20 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">{dados.medias.gols}</span>
                   </div>
                   <div className="flex justify-between items-center group/row">
                     <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Finalizações totais</span>
@@ -559,17 +580,17 @@ export default function App() {
               </div>
 
               {/* Tabela Controle */}
-              <div className="bg-neutral-900/40 rounded-[3rem] p-10 border border-white/5 shadow-2xl backdrop-blur-md relative overflow-hidden group">
+              <div className="bg-neutral-900/40 rounded-[3rem] p-10 border border-[#D4AF37]/10 shadow-2xl backdrop-blur-md relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-15 transition-all duration-700 transform group-hover:scale-125">
-                  <Activity size={120} />
+                  <Activity size={120} className="text-[#D4AF37]" />
                 </div>
-                <h4 className="text-red-400 font-black text-sm uppercase tracking-[0.25em] mb-10 flex items-center gap-4 border-b border-white/5 pb-6">
-                  <Activity size={22} className="text-red-500" /> Domínio & Posicionamento
+                <h4 className="text-[#D4AF37] font-black text-sm uppercase tracking-[0.25em] mb-10 flex items-center gap-4 border-b border-[#D4AF37]/10 pb-6">
+                  <Activity size={22} className="text-[#D4AF37]" /> Domínio & Posicionamento
                 </h4>
                 <div className="space-y-7">
                   <div className="flex justify-between items-center group/row">
                     <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Posse de bola</span>
-                    <span className="font-black text-3xl text-red-500 italic drop-shadow-[0_0_10px_rgba(239,68,68,0.3)]">{dados.medias.posse}</span>
+                    <span className="font-black text-3xl text-[#D4AF37] italic drop-shadow-[0_0_10px_rgba(212,175,55,0.3)]">{dados.medias.posse}</span>
                   </div>
                   <div className="flex justify-between items-center group/row">
                     <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Escanteios</span>
@@ -590,13 +611,13 @@ export default function App() {
           {/* SEÇÃO 2: TOP JOGADORES - ATAQUE */}
           <div className="mb-16 relative z-10">
             <div className="flex items-center gap-6 mb-10">
-              <div className="w-14 h-14 rounded-2xl bg-red-600/20 flex items-center justify-center border border-red-500/40 shadow-lg">
-                <Users className="text-red-500" size={28} />
+              <div className="w-14 h-14 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 shadow-lg">
+                <Users className="text-[#D4AF37]" size={28} />
               </div>
               <h3 className="text-3xl font-black uppercase tracking-tighter text-white italic">
-                Elite <span className="text-red-500">Ofensiva</span>
+                Elite <span className="text-[#D4AF37]">Ofensiva</span>
               </h3>
-              <div className="flex-grow h-[1px] bg-gradient-to-r from-white/10 via-white/5 to-transparent"></div>
+              <div className="flex-grow h-[1px] bg-gradient-to-r from-[#D4AF37]/20 via-[#D4AF37]/5 to-transparent"></div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -629,20 +650,20 @@ export default function App() {
           </div>
 
           {/* Rodapé da Imagem */}
-          <div className="mt-20 pt-12 border-t border-white/5 text-center relative z-10 flex flex-col items-center gap-6">
+          <div className="mt-20 pt-12 border-t border-[#D4AF37]/10 text-center relative z-10 flex flex-col items-center gap-6">
              <div className="flex items-center gap-10">
                 <div className="flex items-center gap-3">
-                  <PieChart size={18} className="text-red-500" />
+                  <PieChart size={18} className="text-[#D4AF37]" />
                   <span className="text-[11px] font-black text-neutral-500 uppercase tracking-[0.3em]">Data Analytics</span>
                 </div>
                 <div className="w-1.5 h-1.5 bg-white/10 rounded-full"></div>
                 <div className="flex items-center gap-3">
-                  <Settings2 size={18} className="text-red-500" />
+                  <Settings2 size={18} className="text-[#D4AF37]" />
                   <span className="text-[11px] font-black text-neutral-500 uppercase tracking-[0.3em]">AI Powered Engine</span>
                 </div>
              </div>
              <p className="text-neutral-600 text-[10px] uppercase tracking-[0.5em] font-black flex items-center gap-3">
-               <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)] animate-pulse"></span>
+               <span className="w-2 h-2 rounded-full bg-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.9)] animate-pulse"></span>
                AnalisAI Intelligence System • v2.5 • {new Date().getFullYear()}
              </p>
           </div>

@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import { extractBetFromImage } from '../services/geminiService';
 
+import { theme } from '../theme';
+
 // --- Assets Visuais de Casas de Aposta ---
 const BetanoIcon = () => (
   <div className="flex items-center gap-1.5 bg-[#FF7324]/10 px-2 py-0.5 rounded-lg border border-[#FF7324]/20 shadow-sm">
@@ -85,12 +87,11 @@ const integerPartWord = (n: number) => n === 1 ? " real" : " reais";
 
 const getOddRisk = (odd: number, isMultiple: boolean) => {
   if (isMultiple) return { label: 'Múltipla', color: 'text-white', bg: 'bg-white/10' };
-  if (odd < 1.25) return { label: 'Risco Mínimo', color: 'text-cyan-400', bg: 'bg-cyan-500/10' };
-  if (odd <= 1.30) return { label: 'Risco Baixo', color: 'text-blue-400', bg: 'bg-blue-500/10' };
-  if (odd <= 1.40) return { label: 'Risco Leve', color: 'text-emerald-400', bg: 'bg-emerald-500/10' };
-  if (odd <= 1.50) return { label: 'Risco Moderado', color: 'text-yellow-400', bg: 'bg-yellow-500/10' };
-  if (odd <= 1.60) return { label: 'Risco Alto', color: 'text-orange-500', bg: 'bg-orange-500/10' };
-  return { label: 'Alto Risco', color: 'text-red-500', bg: 'bg-red-500/10' };
+  if (odd <= 1.30) return { label: 'Risco Baixo', color: 'text-[#3B82F6]', bg: 'bg-[#3B82F6]/10' };
+  if (odd <= 1.40) return { label: 'Risco Leve', color: 'text-[#10B981]', bg: 'bg-[#10B981]/10' };
+  if (odd <= 1.50) return { label: 'Risco Moderado', color: 'text-[#F59E0B]', bg: 'bg-[#F59E0B]/10' };
+  if (odd <= 1.60) return { label: 'Risco Alto', color: 'text-[#F97316]', bg: 'bg-[#F97316]/10' };
+  return { label: 'Alto Risco', color: 'text-[#EF4444]', bg: 'bg-[#EF4444]/10' };
 };
 
 const HOUSES = [
@@ -347,33 +348,33 @@ APANHADO GERAL:
     }
   };
 
-  if (loading) return <div className="h-96 bg-neutral-950 flex items-center justify-center rounded-b-2xl"><Loader2 className="animate-spin text-red-500" size={40} /></div>;
+  if (loading) return <div className="h-96 bg-neutral-950 flex items-center justify-center rounded-b-2xl"><Loader2 className="animate-spin text-[#D4AF37]" size={40} /></div>;
 
   return (
-    <div className="alavancagem-container bg-neutral-950 text-white font-sans selection:bg-red-500 pb-10 rounded-b-2xl">
+    <div className="alavancagem-container bg-[#050505] text-white font-sans selection:bg-[#D4AF37]/30 pb-10 rounded-b-2xl">
       
       {/* HEADER (Baseado na sua imagem) */}
       <header className="px-6 py-8 flex items-center justify-between">
         <div className="flex items-center gap-5">
-           <div className="w-16 h-16 bg-red-900/30 rounded-2xl flex items-center justify-center border-2 border-red-500/20 shadow-[0_8px_15px_rgba(0,0,0,0.2)] relative overflow-hidden">
+           <div className="w-16 h-16 bg-[#D4AF37]/10 rounded-2xl flex items-center justify-center border-2 border-[#D4AF37]/20 shadow-[0_8px_15px_rgba(0,0,0,0.2)] relative overflow-hidden">
               <div className="flex flex-col items-center">
-                 <TrendingUp size={24} className="text-red-500 -mb-1" strokeWidth={3} />
+                 <TrendingUp size={24} className="text-[#D4AF37]" strokeWidth={3} />
                  <div className="flex gap-1">
-                    <div className="w-4 h-4 bg-red-600 rounded-sm flex items-center justify-center"><div className="w-1 h-1 bg-white rounded-full"></div></div>
-                    <div className="w-4 h-4 bg-red-600 rounded-sm"></div>
+                    <div className="w-4 h-4 bg-[#D4AF37] rounded-sm flex items-center justify-center"><div className="w-1 h-1 bg-[#0A0A0A] rounded-full"></div></div>
+                    <div className="w-4 h-4 bg-[#D4AF37] rounded-sm"></div>
                  </div>
               </div>
            </div>
 
            <div className="flex flex-col">
-              <h1 className="text-2xl font-black italic tracking-tighter text-white/70 flex items-baseline leading-none">
+              <h1 className="text-2xl font-black italic tracking-tighter text-[#D4AF37]/70 flex items-baseline leading-none" style={{ fontFamily: theme.fonts.display }}>
                  BET<span className="text-white font-black">MANAGER</span>
               </h1>
               <div className="flex items-center gap-2 mt-1">
                  <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest leading-none">
                     {todayDayName}, {todayDate} DE {todayMonthName}
                  </p>
-                 <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_red]"></div>
+                 <div className="w-2 h-2 bg-[#D4AF37] rounded-full animate-pulse shadow-[0_0_10px_#D4AF37]"></div>
               </div>
            </div>
         </div>
@@ -382,10 +383,10 @@ APANHADO GERAL:
            <button onClick={generateMonthlyReport} className="bg-neutral-800 hover:bg-neutral-700 text-white font-black uppercase text-[10px] tracking-widest px-6 py-3 rounded-full border border-white/5 transition-all">
               Relatório Mensal
            </button>
-           <div className="bg-black/60 rounded-[2rem] p-1 border border-white/10 shadow-xl">
+           <div className="bg-black/60 rounded-[2rem] p-1 border border-[#D4AF37]/10 shadow-xl">
               <div className="bg-neutral-900 rounded-[1.8rem] px-8 py-3 shadow-inner flex flex-col items-center">
                  <span className="text-[8px] text-neutral-400 font-black uppercase tracking-[0.2em] mb-1">PROJEÇÃO FINAL</span>
-                 <span className="text-2xl font-black text-white leading-none tracking-tighter">{fCurrency(stats.proj)}</span>
+                 <span className="text-2xl font-black text-[#D4AF37] leading-none tracking-tighter">{fCurrency(stats.proj)}</span>
               </div>
            </div>
            <div className="w-14 h-14 rounded-full border-4 border-neutral-800 shadow-xl bg-gradient-to-b from-neutral-800 to-neutral-900 flex items-center justify-center">
@@ -398,7 +399,7 @@ APANHADO GERAL:
       <nav className="px-6 mb-10 overflow-x-auto no-scrollbar">
         <div className="flex bg-black/40 p-2 rounded-[2.5rem] border border-white/5 shadow-sm gap-2">
            {MONTHS.map((m, i) => (
-             <button key={m} onClick={() => setCurMonth(i)} className={`px-10 py-3 rounded-[2rem] text-[10px] font-black uppercase transition-all whitespace-nowrap ${curMonth === i ? 'bg-red-600 text-white shadow-md border-b-2 border-red-800' : 'text-neutral-500 hover:text-white'}`}>
+             <button key={m} onClick={() => setCurMonth(i)} className={`px-10 py-3 rounded-[2rem] text-[10px] font-black uppercase transition-all whitespace-nowrap ${curMonth === i ? 'bg-[#D4AF37] text-[#0A0A0A] shadow-md border-b-2 border-[#B8860B]' : 'text-neutral-500 hover:text-white'}`}>
                 {m}
              </button>
            ))}
@@ -409,23 +410,23 @@ APANHADO GERAL:
         
         {/* Sidebar */}
         <aside className="lg:col-span-3 space-y-6">
-          <div className="bg-neutral-900/50 rounded-[2.5rem] border border-white/10 p-8 shadow-2xl shadow-black/50">
+          <div className="bg-neutral-900/50 rounded-[2.5rem] border border-[#D4AF37]/10 p-8 shadow-2xl shadow-black/50">
              <h3 className="text-[11px] font-black uppercase text-neutral-400 mb-8 flex items-center gap-3 border-b-2 border-white/5 pb-4 tracking-widest">
-               <History size={18} className="text-red-500" /> SETUP ATUAL
+               <History size={18} className="text-[#D4AF37]" /> SETUP ATUAL
              </h3>
              <div className="space-y-8">
                 <div className="bg-black/40 p-5 rounded-3xl border border-white/5 shadow-inner">
                    <label className="text-[10px] text-neutral-400 font-black uppercase block mb-2 text-center tracking-widest">BANCA BASE</label>
-                   <input type="number" value={mData.settings.stake} onChange={(e) => { const h = {...history}; h[monthKey] = {...mData, settings: {...mData.settings, stake: Number(e.target.value)}}; setHistory(h); localStorage.setItem('betManagerHistory', JSON.stringify(h)); }} className="w-full bg-transparent text-white font-black text-3xl text-center focus:outline-none" />
+                   <input type="number" value={mData.settings.stake} onChange={(e) => { const h = {...history}; h[monthKey] = {...mData, settings: {...mData.settings, stake: Number(e.target.value)}}; setHistory(h); localStorage.setItem('betManagerHistory', JSON.stringify(h)); }} className="w-full bg-transparent text-[#D4AF37] font-black text-3xl text-center focus:outline-none" />
                 </div>
                 <div className="bg-black/40 p-5 rounded-3xl border border-white/5 shadow-inner">
                    <label className="text-[10px] text-neutral-400 font-black uppercase block mb-2 text-center tracking-widest">ODD PADRÃO</label>
-                   <input type="number" step="0.1" value={mData.settings.odd} onChange={(e) => { const h = {...history}; h[monthKey] = {...mData, settings: {...mData.settings, odd: Number(e.target.value)}}; setHistory(h); localStorage.setItem('betManagerHistory', JSON.stringify(h)); }} className="w-full bg-transparent text-white font-black text-3xl text-center focus:outline-none" />
+                   <input type="number" step="0.1" value={mData.settings.odd} onChange={(e) => { const h = {...history}; h[monthKey] = {...mData, settings: {...mData.settings, odd: Number(e.target.value)}}; setHistory(h); localStorage.setItem('betManagerHistory', JSON.stringify(h)); }} className="w-full bg-transparent text-[#D4AF37] font-black text-3xl text-center focus:outline-none" />
                 </div>
              </div>
           </div>
-          <button onClick={() => dayRefs.current[todayDate]?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="w-full py-6 bg-neutral-900 border border-white/10 rounded-[2.5rem] text-[12px] font-black uppercase tracking-widest text-neutral-400 hover:text-red-500 hover:border-red-500/50 transition-all flex items-center justify-center gap-4 shadow-2xl">
-            <Clock size={20} className="text-red-500" /> IR PARA HOJE
+          <button onClick={() => dayRefs.current[todayDate]?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="w-full py-6 bg-neutral-900 border border-white/10 rounded-[2.5rem] text-[12px] font-black uppercase tracking-widest text-neutral-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/50 transition-all flex items-center justify-center gap-4 shadow-2xl">
+            <Clock size={20} className="text-[#D4AF37]" /> IR PARA HOJE
           </button>
         </aside>
 
@@ -435,19 +436,19 @@ APANHADO GERAL:
               const isToday = d.day === todayDate && curMonth === todayMonth;
               const totalSuggestedReturn = d.suggestedBets.reduce((acc: number, b: any) => acc + (b.amount * b.odd), 0);
 
-              return (
-                <div key={i} ref={el => dayRefs.current[d.day] = el} className={`rounded-[3.5rem] border-4 transition-all flex flex-col overflow-hidden relative shadow-2xl ${d.status === 'won' ? 'bg-emerald-950/20 border-emerald-900/50' : d.status === 'lost' ? 'bg-red-950/20 border-red-900/50' : isToday ? 'bg-neutral-900 border-red-600 ring-8 ring-red-600/10 scale-[1.03] z-10 shadow-red-900/20' : 'bg-neutral-900/50 border-white/5'}`}>
+               return (
+                <div key={i} ref={el => dayRefs.current[d.day] = el} className={`rounded-[3.5rem] border-4 transition-all flex flex-col overflow-hidden relative shadow-2xl ${d.status === 'won' ? 'bg-emerald-950/20 border-emerald-900/50' : d.status === 'lost' ? 'bg-red-950/20 border-red-900/50' : isToday ? 'bg-neutral-900 border-[#D4AF37] ring-8 ring-[#D4AF37]/10 scale-[1.03] z-10 shadow-[#D4AF37]/20' : 'bg-neutral-900/50 border-white/5'}`}>
                   
-                  <div className={`p-8 flex justify-between items-center border-b-2 ${isToday ? 'bg-red-900/20 border-red-900/50' : 'border-white/5'}`}>
-                     <span className={`text-[12px] font-black px-6 py-2 rounded-full shadow-md ${d.status === 'won' ? 'bg-emerald-600 text-white' : d.status === 'lost' ? 'bg-red-600 text-white' : isToday ? 'bg-red-600 text-white' : 'bg-black/50 text-neutral-400'}`}>
+                  <div className={`p-8 flex justify-between items-center border-b-2 ${isToday ? 'bg-[#D4AF37]/10 border-[#D4AF37]/30' : 'border-white/5'}`}>
+                     <span className={`text-[12px] font-black px-6 py-2 rounded-full shadow-md ${d.status === 'won' ? 'bg-emerald-600 text-white' : d.status === 'lost' ? 'bg-red-600 text-white' : isToday ? 'bg-[#D4AF37] text-[#0A0A0A]' : 'bg-black/50 text-neutral-400'}`}>
                        {isToday ? 'HOJE' : `DIA ${d.day < 10 ? '0' : ''}${d.day}`}
                      </span>
                      <div className="flex gap-3">
-                        <button onClick={() => updDay(i, { protectCapital: !d.protectCapital })} className={`p-3 rounded-full transition-all ${d.protectCapital ? 'bg-red-900/40 text-red-500 shadow-inner border border-red-500/30' : 'bg-black/40 text-neutral-500 border border-white/5'}`}>
-                          <Shield size={22} />
+                        <button onClick={() => updDay(i, { protectCapital: !d.protectCapital })} className={`p-3 rounded-full transition-all ${d.protectCapital ? 'bg-[#D4AF37]/20 text-[#D4AF37] shadow-inner border border-[#D4AF37]/30' : 'bg-black/40 text-neutral-500 border border-white/5'}`}>
+                           <Shield size={22} />
                         </button>
                         <button onClick={() => updDay(i, { status: 'pending' })} className="p-3 rounded-full bg-black/40 text-neutral-500 hover:text-white border border-white/5 transition-all">
-                          <RotateCcw size={22} />
+                           <RotateCcw size={22} />
                         </button>
                      </div>
                   </div>
@@ -484,7 +485,7 @@ APANHADO GERAL:
                         <div className="space-y-5">
                            <div className="flex items-center justify-between text-neutral-400 text-[10px] font-black uppercase tracking-[0.2em]">
                               <span>REGISTOS DE ENTRADA</span>
-                              <button onClick={() => { const b=d.bets||[]; updDay(i, {bets: [...b, {match:'NOVA ENTRADA', house:'Betano', odd:1.40, stake:0, status:'pending'}]}); }} className="text-red-500 hover:text-red-400 flex items-center gap-1 font-black"><PlusCircle size={16} /> ADD</button>
+                              <button onClick={() => { const b=d.bets||[]; updDay(i, {bets: [...b, {match:'NOVA ENTRADA', house:'Betano', odd:1.40, stake:0, status:'pending'}]}); }} className="text-[#D4AF37] hover:text-[#E2C275] flex items-center gap-1 font-black"><PlusCircle size={16} /> ADD</button>
                            </div>
                            <div className="space-y-4 max-h-[600px] overflow-y-auto no-scrollbar pr-1">
                               {d.bets.map((bet: any, bIdx: number) => {
@@ -524,8 +525,8 @@ APANHADO GERAL:
                                                <div className="flex justify-between items-center">
                                                   <label className="text-[8px] text-neutral-500 font-black uppercase">TIPO DE APOSTA</label>
                                                   <div className="flex gap-2">
-                                                     <button onClick={() => { const b=[...d.bets]; b[bIdx].isMultiple=false; updDay(i, {bets: b}); }} className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase transition-all ${!bet.isMultiple ? 'bg-red-600 text-white' : 'bg-neutral-800 text-neutral-500'}`}>Simples</button>
-                                                     <button onClick={() => { const b=[...d.bets]; b[bIdx].isMultiple=true; updDay(i, {bets: b}); }} className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase transition-all ${bet.isMultiple ? 'bg-red-600 text-white' : 'bg-neutral-800 text-neutral-500'}`}>Múltipla</button>
+                                                     <button onClick={() => { const b=[...d.bets]; b[bIdx].isMultiple=false; updDay(i, {bets: b}); }} className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase transition-all ${!bet.isMultiple ? 'bg-[#D4AF37] text-[#0A0A0A]' : 'bg-neutral-800 text-neutral-500'}`}>Simples</button>
+                                                     <button onClick={() => { const b=[...d.bets]; b[bIdx].isMultiple=true; updDay(i, {bets: b}); }} className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase transition-all ${bet.isMultiple ? 'bg-[#D4AF37] text-[#0A0A0A]' : 'bg-neutral-800 text-neutral-500'}`}>Múltipla</button>
                                                   </div>
                                                </div>
                                                <div className="flex justify-between items-center border-t border-white/5 pt-3">
@@ -576,10 +577,10 @@ APANHADO GERAL:
                            </div>
                         </div>
                      ) : (
-                        <div className="flex flex-col items-center justify-center py-6 bg-red-950/20 border-4 border-dashed border-red-900/30 rounded-[3rem] shadow-inner relative overflow-hidden">
+                        <div className="flex flex-col items-center justify-center py-6 bg-[#D4AF37]/5 border-4 border-dashed border-[#D4AF37]/20 rounded-[3rem] shadow-inner relative overflow-hidden">
                            <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12"><ArrowBigRightDash size={80} /></div>
-                           <ArrowBigRightDash size={48} className="mb-4 text-red-500 animate-pulse" strokeWidth={3} />
-                           <h4 className="text-[12px] font-black uppercase text-red-400 tracking-widest mb-4 border-b border-red-900/50 pb-2">PLANO DE ALAVANCAGEM</h4>
+                           <ArrowBigRightDash size={48} className="mb-4 text-[#D4AF37] animate-pulse" strokeWidth={3} />
+                           <h4 className="text-[12px] font-black uppercase text-[#D4AF37] tracking-widest mb-4 border-b border-[#D4AF37]/20 pb-2">PLANO DE ALAVANCAGEM</h4>
                            
                            <div className="w-full px-8 space-y-3">
                               {d.suggestedBets.map((sb: any, sIdx: number) => (
@@ -595,13 +596,13 @@ APANHADO GERAL:
                                        </div>
                                        <div className="flex flex-col items-end">
                                           <span className="text-[8px] text-neutral-500 font-bold uppercase tracking-tighter">Retorno</span>
-                                          <span className="text-[14px] font-black text-yellow-400 leading-none">{fCurrency(sb.amount * sb.odd)} <span className="text-yellow-400/70 text-[10px] ml-1">(+{fCurrency((sb.amount * sb.odd) - sb.amount)})</span></span>
+                                          <span className="text-[14px] font-black text-[#D4AF37] leading-none">{fCurrency(sb.amount * sb.odd)} <span className="text-[#D4AF37]/70 text-[10px] ml-1">(+{fCurrency((sb.amount * sb.odd) - sb.amount)})</span></span>
                                        </div>
                                     </div>
                                  </div>
                               ))}
                               
-                              <div className="pt-4 border-t-2 border-dashed border-red-900/30 mt-2">
+                              <div className="pt-4 border-t-2 border-dashed border-[#D4AF37]/20 mt-2">
                                  <div className="flex justify-between items-center text-neutral-300">
                                     <span className="text-[10px] font-black uppercase tracking-widest">TOTAL ALAVANCAGEM</span>
                                     <span className="text-lg font-black text-white">{fCurrency(d.suggestedStake)}</span>
@@ -612,13 +613,13 @@ APANHADO GERAL:
                                  </div>
                               </div>
                            </div>
-                           <p className="mt-6 text-[8px] font-bold text-red-500 uppercase italic px-10 text-center leading-tight">Mande o print das entradas para validar o plano composto.</p>
+                           <p className="mt-6 text-[8px] font-bold text-[#D4AF37] uppercase italic px-10 text-center leading-tight">Mande o print das entradas para validar o plano composto.</p>
                         </div>
                      )}
                   </div>
 
                   {/* Footer Card */}
-                  <div className={`p-10 border-t-4 space-y-8 ${isToday ? 'bg-red-900/10 border-red-900/30' : 'bg-black/20 border-white/5'}`}>
+                  <div className={`p-10 border-t-4 space-y-8 ${isToday ? 'bg-[#D4AF37]/10 border-[#D4AF37]/30' : 'bg-black/20 border-white/5'}`}>
                      <div className="flex flex-col gap-6">
                         <div className="flex justify-between items-end border-b-2 border-white/5 pb-6">
                            <div className="flex flex-col">
@@ -636,7 +637,7 @@ APANHADO GERAL:
                                     className="p-2 bg-neutral-800 rounded-lg border border-white/5 hover:bg-neutral-700 transition-all"
                                     title="Extrair do Print"
                                  >
-                                    <Upload size={14} className="text-red-500" />
+                                    <Upload size={14} className="text-[#D4AF37]" />
                                  </button>
                               </div>
                               <span className="text-[8px] text-neutral-500 italic font-bold uppercase mt-2">{nToWords(d.stake)}</span>
@@ -656,10 +657,10 @@ APANHADO GERAL:
 
                      <div className="pt-8 border-t-4 border-dotted border-white/5">
                         <div className="flex justify-between items-center mb-4 leading-none px-2">
-                           <span className="flex items-center gap-2 text-[11px] font-black uppercase text-red-500 tracking-[0.2em]"><Scissors size={18} /> SANGRIA MANUAL</span>
-                           {d.withdrawal > 0 && <span className="text-[14px] font-black text-red-400 italic">-{fCurrency(d.withdrawal)}</span>}
+                           <span className="flex items-center gap-2 text-[11px] font-black uppercase text-[#D4AF37] tracking-[0.2em]"><Scissors size={18} /> SANGRIA MANUAL</span>
+                           {d.withdrawal > 0 && <span className="text-[14px] font-black text-[#D4AF37] italic">-{fCurrency(d.withdrawal)}</span>}
                         </div>
-                        <div className="bg-black/40 rounded-[2.5rem] border border-white/5 shadow-inner p-6 focus-within:ring-4 ring-red-900/30 transition-all">
+                        <div className="bg-black/40 rounded-[2.5rem] border border-white/5 shadow-inner p-6 focus-within:ring-4 ring-[#D4AF37]/30 transition-all">
                            <input type="number" value={d.withdrawal || ''} onChange={(e) => updDay(i, { withdrawal: Number(e.target.value) })} placeholder="VALOR PARA SAQUE" className="w-full bg-transparent text-center text-2xl font-black text-white focus:outline-none placeholder:text-neutral-600" />
                         </div>
                      </div>
@@ -693,7 +694,7 @@ APANHADO GERAL:
                         <button 
                            key={h}
                            onClick={() => setSelectedHouse(h)}
-                           className={`py-4 rounded-2xl text-[10px] font-black uppercase transition-all border ${selectedHouse === h ? 'bg-red-600 border-red-500 text-white' : 'bg-black/40 border-white/5 text-neutral-500'}`}
+                           className={`py-4 rounded-2xl text-[10px] font-black uppercase transition-all border ${selectedHouse === h ? 'bg-[#D4AF37] border-[#B8860B] text-[#0A0A0A]' : 'bg-black/40 border-white/5 text-neutral-500'}`}
                         >
                            {h}
                         </button>
@@ -701,7 +702,7 @@ APANHADO GERAL:
                   </div>
                   <div className="flex gap-4">
                      <button onClick={() => setShowHouseSelector(null)} className="flex-1 py-4 bg-neutral-800 rounded-2xl text-[10px] font-black uppercase">Cancelar</button>
-                     <label className="flex-1 py-4 bg-red-600 rounded-2xl text-[10px] font-black uppercase text-center cursor-pointer">
+                     <label className="flex-1 py-4 bg-[#D4AF37] rounded-2xl text-[10px] font-black uppercase text-center cursor-pointer text-[#0A0A0A]">
                         Confirmar e Subir
                         <input 
                            type="file" 

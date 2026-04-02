@@ -372,20 +372,23 @@ export default function App() {
           </button>
 
           <div className="flex bg-black/60 rounded-[2rem] p-2 border border-white/5 shadow-inner">
-            <button 
-              onClick={() => setActiveTab('scout')}
-              className={`flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 ${activeTab === 'scout' ? 'bg-gradient-to-b from-red-500 to-red-700 text-white shadow-[0_8px_25px_rgba(220,38,38,0.5)] scale-105' : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/5'}`}
-            >
-              <BarChart3 size={18} />
-              Scout
-            </button>
-            <button 
-              onClick={() => setActiveTab('betmanager')}
-              className={`flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 ${activeTab === 'betmanager' ? 'bg-gradient-to-b from-red-500 to-red-700 text-white shadow-[0_8px_25px_rgba(220,38,38,0.5)] scale-105' : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/5'}`}
-            >
-              <CircleDollarSign size={18} />
-              Bet Manager
-            </button>
+            {activeTab === 'scout' ? (
+              <button 
+                onClick={() => setActiveTab('scout')}
+                className="flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 bg-gradient-to-b from-red-500 to-red-700 text-white shadow-[0_8px_25px_rgba(220,38,38,0.5)] scale-105"
+              >
+                <BarChart3 size={18} />
+                Scout
+              </button>
+            ) : (
+              <button 
+                onClick={() => setActiveTab('betmanager')}
+                className="flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 bg-gradient-to-b from-red-500 to-red-700 text-white shadow-[0_8px_25px_rgba(220,38,38,0.5)] scale-105"
+              >
+                <CircleDollarSign size={18} />
+                Bet Manager
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -710,17 +713,8 @@ export default function App() {
         </div>
       </footer>
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #050505; }
-        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
-        select { background-image: none !important; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #050505; }
-        ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #2a2a2a; }
-      `}} />
     </div>
+      )}
+    </>
   );
 }

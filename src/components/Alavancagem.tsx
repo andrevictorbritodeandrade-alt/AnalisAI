@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   TrendingUp, RotateCcw, Trophy, 
   Target, Banknote, AlertCircle, Scissors, 
@@ -33,6 +34,15 @@ const SportingbetIcon = () => (
       <span className="text-[8px] text-white font-black">S</span>
     </div>
     <span className="text-[8px] font-black text-[#003272] tracking-tighter uppercase">Sporting</span>
+  </div>
+);
+
+const VupibetIcon = () => (
+  <div className="flex items-center gap-1.5 bg-purple-600/10 px-2 py-0.5 rounded-lg border border-purple-600/20 shadow-sm">
+    <div className="w-3 h-3 bg-purple-600 rounded-full flex items-center justify-center">
+      <span className="text-[8px] text-white font-black">V</span>
+    </div>
+    <span className="text-[8px] font-black text-purple-600 tracking-tighter uppercase">Vupibet</span>
   </div>
 );
 
@@ -73,6 +83,16 @@ const nToWords = (n: number) => {
 
 const integerPartWord = (n: number) => n === 1 ? " real" : " reais";
 
+const getOddRisk = (odd: number, isMultiple: boolean) => {
+  if (isMultiple) return { label: 'Múltipla', color: 'text-white', bg: 'bg-white/10' };
+  if (odd < 1.25) return { label: 'Risco Mínimo', color: 'text-cyan-400', bg: 'bg-cyan-500/10' };
+  if (odd <= 1.30) return { label: 'Risco Baixo', color: 'text-blue-400', bg: 'bg-blue-500/10' };
+  if (odd <= 1.40) return { label: 'Risco Leve', color: 'text-emerald-400', bg: 'bg-emerald-500/10' };
+  if (odd <= 1.50) return { label: 'Risco Moderado', color: 'text-yellow-400', bg: 'bg-yellow-500/10' };
+  if (odd <= 1.60) return { label: 'Risco Alto', color: 'text-orange-500', bg: 'bg-orange-500/10' };
+  return { label: 'Alto Risco', color: 'text-red-500', bg: 'bg-red-500/10' };
+};
+
 const HOUSES = [
   'bet365',
   'betano',
@@ -82,7 +102,8 @@ const HOUSES = [
   'pixbet',
   'sportingbet',
   'superbet',
-  'vaidebet'
+  'vaidebet',
+  'vupibet'
 ];
 
 const MONTHS = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
@@ -93,7 +114,9 @@ const Alavancagem = () => {
   const [history, setHistory] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [expandedBet, setExpandedBet] = useState<number[] | null>(null);
-  const [uploadingImage, setUploadingImage] = useState<{dayIdx: number, betIdx: number} | null>(null);
+  const [uploadingImage, setUploadingImage] = useState<{dayIdx: number, betIdx: number | 'day'} | null>(null);
+  const [showHouseSelector, setShowHouseSelector] = useState<{dayIdx: number, betIdx: number | 'day'} | null>(null);
+  const [selectedHouse, setSelectedHouse] = useState('betano');
 
   const dayRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const now = new Date();
@@ -116,13 +139,14 @@ const Alavancagem = () => {
       setHistory(JSON.parse(savedHistory));
     } else {
       const initialDays = Array.from({ length: 31 }, (_, i) => ({
-        day: i + 1, status: 'pending', withdrawal: 0, protectCapital: false, balances: HOUSES.reduce((acc, h) => ({...acc, [h]: 0}), {}), bets: (i + 1 === 26) ? [
-          { match: "BRASIL X FRANÇA", house: 'betano', odd: 1.57, stake: 3.13, status: 'won', ticketNumber: '', returnAmount: 4.91, profit: 1.78, selections: '' },
-          { match: "MÚLTIPLA 3 JOGOS", house: 'estrelabet', odd: 3.04, stake: 0.50, status: 'won', ticketNumber: '', returnAmount: 1.52, profit: 1.02, selections: '' },
-          { match: "COMBO 8 FAVORITOS", house: 'sportingbet', odd: 9.33, stake: 1.07, status: 'lost', ticketNumber: '', returnAmount: 9.98, profit: 8.91, selections: '' }
-        ] : []
+        day: i + 1, 
+        status: 'pending', 
+        withdrawal: 0, 
+        protectCapital: false, 
+        balances: HOUSES.reduce((acc, h) => ({...acc, [h]: 0}), {}), 
+        bets: []
       }));
-      const initialData = { [`${curMonth}_2026`]: { days: initialDays, settings: { stake: 4.70, odd: 1.40 } } };
+      const initialData = { [`${curMonth}_2026`]: { days: initialDays, settings: { stake: 0, odd: 1.40 } } };
       setHistory(initialData);
       localStorage.setItem('betManagerHistory', JSON.stringify(initialData));
     }
@@ -154,7 +178,7 @@ const Alavancagem = () => {
           nextStake = hasBets ? d.bets.reduce((acc: number, b: any) => acc + (b.stake || 0), 0) : mData.settings.stake;
       }
 
-      let currentStake = hasBets ? d.bets.reduce((acc: number, b: any) => acc + (b.stake || 0), 0) : (foundStart ? nextStake : 0);
+      let currentStake = d.manualStake !== undefined ? d.manualStake : (hasBets ? d.bets.reduce((acc: number, b: any) => acc + (b.stake || 0), 0) : (foundStart ? nextStake : 0));
       
       let totalReturn = 0;
       let currentDayWins: any[] = [];
@@ -284,11 +308,7 @@ APANHADO GERAL:
     updDay(dIdx, { bets: b });
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, dIdx: number, bIdx: number) => {
-    const target = e.target;
-    const file = target.files?.[0];
-    if (!file) return;
-
+  const handleImageUpload = async (file: File, dIdx: number, bIdx: number | 'day', house: string) => {
     setUploadingImage({ dayIdx: dIdx, betIdx: bIdx });
 
     try {
@@ -298,29 +318,32 @@ APANHADO GERAL:
         const extractedData = await extractBetFromImage(base64String, file.type);
         
         if (extractedData) {
-          const b = [...mData.days[dIdx].bets];
-          b[bIdx] = {
-            ...b[bIdx],
-            house: extractedData.house || b[bIdx].house,
-            ticketNumber: extractedData.ticketNumber || '',
-            stake: extractedData.stake || b[bIdx].stake,
-            returnAmount: extractedData.returnAmount || 0,
-            odd: extractedData.odd || b[bIdx].odd,
-            profit: extractedData.profit || 0,
-            selections: extractedData.selections || '',
-            match: extractedData.selections ? extractedData.selections.substring(0, 30) + '...' : b[bIdx].match
-          };
-          updDay(dIdx, { bets: b });
+          if (bIdx === 'day') {
+            // Extraindo valor para iniciar o dia
+            updDay(dIdx, { manualStake: extractedData.stake || 0 });
+          } else {
+            const b = [...mData.days[dIdx].bets];
+            b[bIdx] = {
+              ...b[bIdx],
+              house: house || extractedData.house || b[bIdx].house,
+              ticketNumber: extractedData.ticketNumber || '',
+              stake: extractedData.stake || b[bIdx].stake,
+              returnAmount: extractedData.returnAmount || 0,
+              odd: extractedData.odd || b[bIdx].odd,
+              profit: extractedData.profit || 0,
+              selections: extractedData.selections || '',
+              match: extractedData.selections ? extractedData.selections.substring(0, 30) + '...' : b[bIdx].match
+            };
+            updDay(dIdx, { bets: b });
+          }
         }
         setUploadingImage(null);
-        if (target) target.value = '';
       };
       reader.readAsDataURL(file);
     } catch (error) {
       console.error("Error uploading image:", error);
       alert("Erro ao extrair dados da imagem. Tente novamente.");
       setUploadingImage(null);
-      if (target) target.value = '';
     }
   };
 
@@ -467,11 +490,12 @@ APANHADO GERAL:
                               {d.bets.map((bet: any, bIdx: number) => {
                                  const isExpanded = expandedBet && expandedBet[0] === i && expandedBet[1] === bIdx;
                                  const betReturn = (bet.stake || 0) * (bet.odd || 0);
+                                 const risk = getOddRisk(bet.odd || 0, bet.isMultiple);
                                  return (
                                    <div key={bIdx} className={`rounded-[2.5rem] border-2 transition-all shadow-sm ${bet.status === 'won' ? 'bg-neutral-900 border-emerald-900/50' : bet.status === 'lost' ? 'bg-neutral-900 border-red-900/50' : 'bg-black/40 border-white/5'}`}>
                                       <div className="p-6 cursor-pointer" onClick={() => setExpandedBet(isExpanded ? null : [i, bIdx])}>
                                          <div className="flex justify-between items-start mb-5">
-                                            {bet.house === 'Betano' ? <BetanoIcon /> : bet.house === 'EstrelaBet' ? <EstrelaIcon /> : <SportingbetIcon />}
+                                            {bet.house === 'Betano' ? <BetanoIcon /> : bet.house === 'EstrelaBet' ? <EstrelaIcon /> : bet.house === 'Vupibet' ? <VupibetIcon /> : <SportingbetIcon />}
                                             <div className="flex flex-col items-end gap-1.5">
                                                <div className="flex flex-col items-end leading-none border-b border-white/5 pb-2 w-full">
                                                   <span className="text-[8px] text-neutral-500 font-black uppercase">Entrada</span>
@@ -479,7 +503,8 @@ APANHADO GERAL:
                                                </div>
                                                <div className="flex flex-col items-end leading-none pt-1">
                                                   <span className="text-[8px] text-neutral-500 font-black uppercase">Retorno</span>
-                                                  <span className="text-[13px] font-black text-emerald-500 font-mono italic">@ {bet.odd} → {fCurrency(betReturn)} <span className="text-emerald-400/70 text-[10px] ml-1">(+{fCurrency(betReturn - (bet.stake || 0))})</span></span>
+                                                  <span className={`text-[13px] font-black leading-none font-mono italic ${risk.color}`}>@ {bet.odd} → {fCurrency(betReturn)} <span className="opacity-70 text-[10px] ml-1">(+{fCurrency(betReturn - (bet.stake || 0))})</span></span>
+                                                  {!bet.isMultiple && <span className={`text-[8px] font-black uppercase mt-1 px-2 py-0.5 rounded ${risk.bg} ${risk.color}`}>{risk.label}</span>}
                                                </div>
                                             </div>
                                          </div>
@@ -497,6 +522,13 @@ APANHADO GERAL:
 
                                             <div className="bg-black/40 border border-white/5 p-4 rounded-3xl shadow-inner space-y-3">
                                                <div className="flex justify-between items-center">
+                                                  <label className="text-[8px] text-neutral-500 font-black uppercase">TIPO DE APOSTA</label>
+                                                  <div className="flex gap-2">
+                                                     <button onClick={() => { const b=[...d.bets]; b[bIdx].isMultiple=false; updDay(i, {bets: b}); }} className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase transition-all ${!bet.isMultiple ? 'bg-red-600 text-white' : 'bg-neutral-800 text-neutral-500'}`}>Simples</button>
+                                                     <button onClick={() => { const b=[...d.bets]; b[bIdx].isMultiple=true; updDay(i, {bets: b}); }} className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase transition-all ${bet.isMultiple ? 'bg-red-600 text-white' : 'bg-neutral-800 text-neutral-500'}`}>Múltipla</button>
+                                                  </div>
+                                               </div>
+                                               <div className="flex justify-between items-center border-t border-white/5 pt-3">
                                                   <label className="text-[8px] text-neutral-500 font-black uppercase">CASA DE APOSTA</label>
                                                   <select value={bet.house?.toLowerCase() || 'betano'} onChange={(e) => { const b=[...d.bets]; b[bIdx].house=e.target.value; updDay(i, {bets: b}); }} className="bg-transparent text-white font-black text-sm focus:outline-none text-right">
                                                      {HOUSES.map(h => <option key={h} value={h} className="bg-neutral-900">{h.toUpperCase()}</option>)}
@@ -524,14 +556,16 @@ APANHADO GERAL:
                                             </div>
                                             
                                             <div className="flex gap-3">
-                                               <label className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-white text-[10px] font-black uppercase rounded-2xl border border-white/10 transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                                               <button 
+                                                  onClick={() => setShowHouseSelector({ dayIdx: i, betIdx: bIdx })}
+                                                  className="flex-1 py-3 bg-neutral-800 hover:bg-neutral-700 text-white text-[10px] font-black uppercase rounded-2xl border border-white/10 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                                               >
                                                   {uploadingImage?.dayIdx === i && uploadingImage?.betIdx === bIdx ? (
                                                      <><Loader2 size={14} className="animate-spin" /> LENDO...</>
                                                   ) : (
                                                      <><Upload size={14} /> LER PRINT</>
                                                   )}
-                                                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, i, bIdx)} disabled={uploadingImage !== null} />
-                                               </label>
+                                               </button>
                                                <button onClick={() => { const b=d.bets.filter((_: any, idx: number)=>idx!==bIdx); updDay(i, {bets:b}); }} className="flex-1 py-3 bg-red-950/30 text-red-500 hover:bg-red-900/50 text-[10px] font-black uppercase rounded-2xl border border-red-900/50 transition-colors">EXCLUIR</button>
                                             </div>
                                          </div>
@@ -551,7 +585,7 @@ APANHADO GERAL:
                               {d.suggestedBets.map((sb: any, sIdx: number) => (
                                  <div key={sIdx} className="bg-neutral-900 rounded-3xl p-4 shadow-lg border border-white/5">
                                     <div className="flex justify-between items-center mb-1">
-                                       {sb.house === 'Betano' ? <BetanoIcon /> : <EstrelaIcon />}
+                                       {sb.house === 'Betano' ? <BetanoIcon /> : sb.house === 'Vupibet' ? <VupibetIcon /> : <EstrelaIcon />}
                                        <span className="text-[11px] font-black text-emerald-500 font-mono italic">@ {sb.odd}</span>
                                     </div>
                                     <div className="flex justify-between items-end">
@@ -589,7 +623,22 @@ APANHADO GERAL:
                         <div className="flex justify-between items-end border-b-2 border-white/5 pb-6">
                            <div className="flex flex-col">
                               <p className="text-[10px] text-neutral-500 font-black uppercase mb-1 tracking-widest">ENTRADA DO DIA</p>
-                              <p className="text-2xl font-black text-white leading-none tracking-tighter">{fCurrency(d.stake)}</p>
+                              <div className="flex items-center gap-2">
+                                 <input 
+                                    type="number" 
+                                    value={d.stake || ''} 
+                                    onChange={(e) => updDay(i, { manualStake: Number(e.target.value) })}
+                                    className="bg-transparent text-2xl font-black text-white leading-none tracking-tighter focus:outline-none w-32" 
+                                    placeholder="0.00"
+                                 />
+                                 <button 
+                                    onClick={() => setShowHouseSelector({ dayIdx: i, betIdx: 'day' })}
+                                    className="p-2 bg-neutral-800 rounded-lg border border-white/5 hover:bg-neutral-700 transition-all"
+                                    title="Extrair do Print"
+                                 >
+                                    <Upload size={14} className="text-red-500" />
+                                 </button>
+                              </div>
                               <span className="text-[8px] text-neutral-500 italic font-bold uppercase mt-2">{nToWords(d.stake)}</span>
                            </div>
                            <div className="text-right flex flex-col">
@@ -627,6 +676,51 @@ APANHADO GERAL:
         @keyframes fadeIn { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
         .alavancagem-container main > div > div { animation: fadeIn 0.9s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
       `}} />
+
+      {/* MODAL SELETOR DE CASA PARA UPLOAD */}
+      <AnimatePresence>
+         {showHouseSelector && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+               <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="bg-neutral-900 border border-white/10 p-8 rounded-[3rem] max-w-md w-full shadow-2xl"
+               >
+                  <h3 className="text-xl font-black uppercase tracking-widest text-center mb-6">Selecione a Casa</h3>
+                  <div className="grid grid-cols-2 gap-4 mb-8">
+                     {HOUSES.map(h => (
+                        <button 
+                           key={h}
+                           onClick={() => setSelectedHouse(h)}
+                           className={`py-4 rounded-2xl text-[10px] font-black uppercase transition-all border ${selectedHouse === h ? 'bg-red-600 border-red-500 text-white' : 'bg-black/40 border-white/5 text-neutral-500'}`}
+                        >
+                           {h}
+                        </button>
+                     ))}
+                  </div>
+                  <div className="flex gap-4">
+                     <button onClick={() => setShowHouseSelector(null)} className="flex-1 py-4 bg-neutral-800 rounded-2xl text-[10px] font-black uppercase">Cancelar</button>
+                     <label className="flex-1 py-4 bg-red-600 rounded-2xl text-[10px] font-black uppercase text-center cursor-pointer">
+                        Confirmar e Subir
+                        <input 
+                           type="file" 
+                           accept="image/*" 
+                           className="hidden" 
+                           onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file && showHouseSelector) {
+                                 handleImageUpload(file, showHouseSelector.dayIdx, showHouseSelector.betIdx, selectedHouse);
+                                 setShowHouseSelector(null);
+                              }
+                           }} 
+                        />
+                     </label>
+                  </div>
+               </motion.div>
+            </div>
+         )}
+      </AnimatePresence>
     </div>
   );
 };

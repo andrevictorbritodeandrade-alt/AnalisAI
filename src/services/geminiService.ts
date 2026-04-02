@@ -2,6 +2,13 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+export const EQUIPES_MONITORADAS = ["FLAMENGO", "PALMEIRAS", "VASCO", "SANTOS", "SAO_PAULO"];
+
+export async function buscarDadosNaIA(equipe: string) {
+  // Placeholder implementation
+  return null;
+}
+
 export async function extractBetFromImage(base64Image: string, mimeType: string) {
   try {
     const response = await ai.models.generateContent({

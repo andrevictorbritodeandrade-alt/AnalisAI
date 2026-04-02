@@ -73,6 +73,29 @@ const SeloAposta = ({ texto }: { texto: string }) => (
   </span>
 );
 
+const Menu = ({ onSelect }: { onSelect: (tab: 'scout' | 'betmanager') => void }) => (
+  <div className="min-h-screen bg-slate-950 p-4 md:p-8 font-sans text-white flex flex-col items-center justify-center">
+    <Logo3D />
+    <h2 className="text-2xl font-black text-white mt-8 mb-12 uppercase tracking-widest">Escolha o Módulo</h2>
+    <div className="flex flex-col gap-6 w-full max-w-md">
+      <button 
+        onClick={() => onSelect('scout')}
+        className="bg-neutral-900/40 p-8 rounded-[2rem] border border-white/5 hover:border-red-500/30 transition-all flex items-center gap-6 group"
+      >
+        <BarChart3 size={40} className="text-red-500 group-hover:scale-110 transition-transform" />
+        <span className="text-xl font-black uppercase tracking-widest">Analisai (Scout)</span>
+      </button>
+      <button 
+        onClick={() => onSelect('betmanager')}
+        className="bg-neutral-900/40 p-8 rounded-[2rem] border border-white/5 hover:border-red-500/30 transition-all flex items-center gap-6 group"
+      >
+        <CircleDollarSign size={40} className="text-emerald-500 group-hover:scale-110 transition-transform" />
+        <span className="text-xl font-black uppercase tracking-widest">Bet Manager</span>
+      </button>
+    </div>
+  </div>
+);
+
 // Componente Auxiliar para renderizar as listas de Top 3
 function RankingBox({ titulo, dados, destaque = false, cor = "red", tipo = "none" }: { titulo: string, dados: any[], destaque?: boolean, cor?: "red" | "neutral", tipo?: "chute" | "none" }) {
   const bgClass = cor === "red" ? "bg-neutral-900/40" : "bg-black/40";
@@ -130,6 +153,7 @@ export default function App() {
   const [competicaoAtual, setCompeticaoAtual] = useState('');
   const [competicoesDisponiveis, setCompeticoesDisponiveis] = useState<{id: string, name: string}[]>([]);
   const [activeTab, setActiveTab] = useState<'scout' | 'betmanager'>('scout');
+  const [currentView, setCurrentView] = useState<'menu' | 'app'>('menu');
   const [dados, setDados] = useState<any>(null);
 
   // Busca as competições disponíveis para a equipe
@@ -300,7 +324,14 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 p-4 md:p-8 font-sans text-white flex flex-col items-center selection:bg-red-500/30">
+    <>
+      {currentView === 'menu' ? (
+        <Menu onSelect={(tab) => { setActiveTab(tab); setCurrentView('app'); }} />
+      ) : (
+        <div className="min-h-screen bg-slate-950 p-4 md:p-8 font-sans text-white flex flex-col items-center selection:bg-red-500/30">
+          <button onClick={() => setCurrentView('menu')} className="fixed top-4 left-4 z-50 bg-neutral-900/80 p-3 rounded-full border border-white/10 hover:bg-red-900/50 transition-all">
+            <ChevronDown size={20} className="rotate-90" />
+          </button>
       
       {/* HEADER E NAVEGAÇÃO PRINCIPAL */}
       <div className="w-full max-w-6xl mb-10 flex flex-col md:flex-row justify-between items-center bg-slate-900/40 p-8 rounded-[3rem] border border-slate-800 shadow-[0_30px_60px_rgba(0,0,0,0.8)] backdrop-blur-xl relative overflow-hidden group">

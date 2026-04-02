@@ -208,6 +208,68 @@ const Alavancagem = () => {
     proj: calcDays[30].ret
   }), [mData, calcDays]);
 
+  const generateMonthlyReport = () => {
+    const report: any = {};
+    HOUSES.forEach(h => report[h] = { entradas: 0, reaposta: 0, perda: 0, ganho: 0 });
+    let totalEntradas = 0;
+    let totalReaposta = 0;
+    let totalPerda = 0;
+    let totalGanho = 0;
+
+    mData.days.forEach((d: any) => {
+      // 1. Entradas (Roulette/Earnings)
+      HOUSES.forEach(h => {
+        const val = d.balances?.[h] || 0;
+        report[h].entradas += val;
+        totalEntradas += val;
+      });
+
+      // 2. Bets
+      d.bets?.forEach((b: any) => {
+        const h = b.house.toLowerCase();
+        if (!report[h]) return;
+
+        // Reaposta
+        report[h].reaposta += (b.stake || 0);
+        totalReaposta += (b.stake || 0);
+
+        // Perda
+        if (b.status === 'lost') {
+          report[h].perda += (b.stake || 0);
+          totalPerda += (b.stake || 0);
+        }
+
+        // Ganho
+        if (b.status === 'won') {
+          report[h].ganho += (b.profit || 0);
+          totalGanho += (b.profit || 0);
+        }
+      });
+    });
+
+    let reportStr = `Resumo Mensal - ${MONTHS[curMonth]}\n---------------------------\n`;
+    
+    HOUSES.forEach(h => {
+      if (report[h].entradas > 0 || report[h].reaposta > 0 || report[h].perda > 0 || report[h].ganho > 0) {
+        reportStr += `\n${h.toUpperCase()}:
+  - Entradas (Roleta): ${fCurrency(report[h].entradas)}
+  - Reaposta: ${fCurrency(report[h].reaposta)}
+  - Ganhos: ${fCurrency(report[h].ganho)}
+  - Perdas: ${fCurrency(report[h].perda)}`;
+      }
+    });
+
+    reportStr += `\n\n---------------------------
+APANHADO GERAL:
+- Total Entradas (Roleta): ${fCurrency(totalEntradas)}
+- Total Reaposta: ${fCurrency(totalReaposta)}
+- Total Ganhos: ${fCurrency(totalGanho)}
+- Total Perdas: ${fCurrency(totalPerda)}
+- Saldo Final: ${fCurrency(totalGanho - totalPerda)}`;
+
+    alert(reportStr);
+  };
+
   const updDay = (idx: number, up: any) => {
     const h = { ...history }; const ds = [...mData.days];
     ds[idx] = { ...ds[idx], ...up };
@@ -294,6 +356,9 @@ const Alavancagem = () => {
         </div>
 
         <div className="flex items-center gap-5">
+           <button onClick={generateMonthlyReport} className="bg-neutral-800 hover:bg-neutral-700 text-white font-black uppercase text-[10px] tracking-widest px-6 py-3 rounded-full border border-white/5 transition-all">
+              Relatório Mensal
+           </button>
            <div className="bg-black/60 rounded-[2rem] p-1 border border-white/10 shadow-xl">
               <div className="bg-neutral-900 rounded-[1.8rem] px-8 py-3 shadow-inner flex flex-col items-center">
                  <span className="text-[8px] text-neutral-400 font-black uppercase tracking-[0.2em] mb-1">PROJEÇÃO FINAL</span>

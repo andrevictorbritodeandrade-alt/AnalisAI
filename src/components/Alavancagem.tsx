@@ -454,7 +454,6 @@ APANHADO GERAL:
         <div className="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
            {calcDays.map((d, i) => {
               const isToday = d.day === todayDate && curMonth === todayMonth;
-              const totalSuggestedReturn = d.suggestedBets.reduce((acc: number, b: any) => acc + (b.amount * b.odd), 0);
 
                return (
                 <div key={i} ref={el => dayRefs.current[d.day] = el} className={`rounded-[3.5rem] border-4 transition-all flex flex-col overflow-hidden relative shadow-2xl ${d.status === 'won' ? 'bg-emerald-950/20 border-emerald-900/50' : d.status === 'lost' ? 'bg-red-950/20 border-red-900/50' : isToday ? 'bg-neutral-900 border-[#D4AF37] ring-8 ring-[#D4AF37]/10 scale-[1.03] z-10 shadow-[#D4AF37]/20' : 'bg-neutral-900/50 border-white/5'}`}>

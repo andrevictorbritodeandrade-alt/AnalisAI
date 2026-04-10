@@ -1,741 +1,184 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { toJpeg } from 'html-to-image';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Trophy, 
   TrendingUp, 
-  RefreshCw, 
-  Download, 
-  Target, 
-  Activity, 
-  Users, 
-  ShieldCheck,
   LayoutGrid,
-  ChevronDown,
-  CircleDollarSign,
-  Zap,
-  BarChart3,
-  PieChart,
-  Settings2,
-  ExternalLink,
-  Search,
-  Filter,
-  Clock
+  Calendar,
+  Key
 } from 'lucide-react';
-import Alavancagem from './components/Alavancagem';
-import { EQUIPES_MONITORADAS, buscarDadosNaIA } from './services/geminiService';
-
+import { motion, AnimatePresence } from 'motion/react';
+import Scouts from './components/Scouts';
+import BetManager from './components/BetManager';
 import { theme } from './theme';
 
-const CLUB_CRESTS: Record<string, string> = {
-  FLAMENGO: "https://a.espncdn.com/i/teamlogos/soccer/500/819.png",
-  PALMEIRAS: "https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg",
-  BOTAFOGO: "https://upload.wikimedia.org/wikipedia/commons/c/cb/Botafogo_de_Futebol_e_Regatas_logo.svg",
-  REAL_MADRID: "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg",
-  MAN_CITY: "https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg",
-  BAYERN: "https://upload.wikimedia.org/wikipedia/commons/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg",
-  PSG: "https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg",
-};
+const TacticalField = ({ size = 24, className = "" }) => (
+  <div className={`relative ${className}`} style={{ width: size, height: size }}>
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="5" y="5" width="90" height="90" rx="4" strokeOpacity="0.8" />
+      <line x1="5" y1="50" x2="95" y2="50" strokeOpacity="0.8" />
+      <circle cx="50" cy="50" r="12" strokeOpacity="0.8" />
+      <rect x="30" y="5" width="40" height="15" strokeOpacity="0.8" />
+      <rect x="30" y="80" width="40" height="15" strokeOpacity="0.8" />
+      {/* Tactical lines */}
+      <path d="M20 30 L35 45" strokeOpacity="0.4" strokeDasharray="4 2" />
+      <path d="M80 30 L65 45" strokeOpacity="0.4" strokeDasharray="4 2" />
+      <circle cx="20" cy="30" r="2" fill="currentColor" fillOpacity="0.4" />
+      <circle cx="80" cy="30" r="2" fill="currentColor" fillOpacity="0.4" />
+      <path d="M50 60 L50 75" strokeOpacity="0.6" strokeWidth="3" />
+      <path d="M45 70 L50 75 L55 70" strokeOpacity="0.6" strokeWidth="3" />
+    </svg>
+  </div>
+);
 
-// Componente visual do Logo Premium (Analisai)
-const LogoPremium = () => (
-  <div className="flex flex-col items-center justify-center gap-2">
-    <div className="relative flex items-center justify-center p-1 bg-gradient-to-b from-[#E2C275] via-[#D4AF37] to-[#B8860B] rounded-[2rem] shadow-[0_10px_30px_rgba(184,134,11,0.4)]">
-      <div className="bg-[#0A0A0A] rounded-[1.8rem] px-8 py-4 flex items-center gap-4 border border-[#E2C275]/20">
-        <div className="w-12 h-12 bg-gradient-to-br from-[#E2C275] to-[#B8860B] rounded-xl flex items-center justify-center shadow-inner">
-          <TrendingUp className="text-[#0A0A0A]" size={28} strokeWidth={3} />
-        </div>
-        <div className="flex flex-col leading-none">
-          <h1 className="text-4xl font-black tracking-[-0.05em] uppercase italic flex items-center gap-1" style={{ fontFamily: theme.fonts.display }}>
-            <span className="text-transparent bg-clip-text bg-gradient-to-b from-[#F5E6AD] via-[#D4AF37] to-[#B8860B] drop-shadow-[0_2px_10px_rgba(212,175,55,0.5)]">ANALIS</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-b from-[#F5E6AD] via-[#D4AF37] to-[#B8860B] drop-shadow-[0_2px_10px_rgba(212,175,55,0.5)]">AI</span>
-          </h1>
-          <span className="text-[10px] font-bold text-[#D4AF37]/80 uppercase tracking-[0.4em] mt-1">Análise e alavancagem esportiva</span>
-        </div>
-      </div>
+const MarketFootball = ({ size = 24, className = "" }) => (
+  <div className={`relative ${className}`} style={{ width: size, height: size }}>
+    {/* Financial Arrows */}
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 17l6-6 4 4 8-8" stroke="#10B981" />
+      <path d="M17 7h4v4" stroke="#10B981" />
+      <path d="M3 7l6 6 4-4 8 8" stroke="#EF4444" className="opacity-40" />
+      <path d="M17 17h4v-4" stroke="#EF4444" className="opacity-40" />
+    </svg>
+    {/* Football */}
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-full p-1 shadow-xl border-2 border-black">
+      <svg width={size/2} height={size/2} viewBox="0 0 24 24" fill="black">
+        <circle cx="12" cy="12" r="10" fill="white" />
+        <path d="M12 2L15 5L12 8L9 5L12 2Z" />
+        <path d="M12 22L15 19L12 16L9 19L12 22Z" />
+        <path d="M2 12L5 15L8 12L5 9L2 12Z" />
+        <path d="M22 12L19 15L16 12L19 9L22 12Z" />
+      </svg>
     </div>
   </div>
 );
 
-// Componente visual do "Selo de Aposta Recomendada"
-const SeloAposta = ({ texto }: { texto: string }) => (
-  <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-[#0A0A0A] text-[10px] font-black px-3 py-1.5 rounded-xl uppercase tracking-wider animate-pulse shadow-[0_4px_15px_rgba(212,175,55,0.4)] border border-[#E2C275]/30">
-    <Zap size={12} className="fill-[#0A0A0A]" /> {texto}
-  </span>
-);
-
-const Menu = ({ onSelect }: { onSelect: (tab: 'scout' | 'betmanager') => void }) => (
+const Menu = ({ onSelect }: { onSelect: (tab: 'analisai' | 'betManager') => void }) => (
   <div className="min-h-screen relative overflow-hidden font-sans text-white flex flex-col items-center justify-center p-6">
-    {/* Background Image with Overlay */}
+    {/* Background Image with Overlay - AI Generated Salvador Sepia Mix */}
     <div className="absolute inset-0 z-0">
       <img 
-        src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=2070&auto=format&fit=crop" 
-        className="w-full h-full object-cover"
-        alt="Stadium Background"
+        src="https://images.unsplash.com/photo-1590947132387-155cc02f3212?q=80&w=2070&auto=format&fit=crop" 
+        className="w-full h-full object-cover grayscale sepia brightness-[0.3] contrast-[1.2]"
+        alt="Salvador Fonte Nova Tororó Sepia Football Mix"
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-[#1a1405]/80 to-black/90"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/95"></div>
       <div className="absolute inset-0 backdrop-blur-[2px]"></div>
+      {/* Texture overlay */}
+      <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
     </div>
 
-    <div className="relative z-10 flex flex-col items-center w-full max-w-2xl">
-      <LogoPremium />
+    <div className="relative z-10 flex flex-col items-center w-full max-w-5xl">
       
-      <h2 className="text-xl font-black text-[#D4AF37] mt-16 mb-12 uppercase tracking-[0.4em] drop-shadow-lg" style={{ fontFamily: theme.fonts.sans }}>
-        Escolha o Módulo
+      <h2 className="text-4xl md:text-5xl font-black text-[#D4AF37] mt-24 mb-20 uppercase tracking-[0.4em] drop-shadow-[0_10px_20px_rgba(0,0,0,1)] text-center">
+        MÓDULOS DE ELITE
       </h2>
 
-      <div className="flex flex-col gap-8 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-16 w-full px-8">
         <button 
-          onClick={() => onSelect('scout')}
-          className="group relative bg-[#0A0A0A]/90 p-10 rounded-[2.5rem] border border-[#D4AF37]/30 hover:border-[#D4AF37] transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center gap-8 overflow-hidden"
+          onClick={() => onSelect('analisai')} 
+          className="group relative bg-[#0A0A0A]/80 border border-[#D4AF37]/40 rounded-[5rem] p-20 flex flex-col items-center active:scale-95 transition-all text-center hover:border-[#D4AF37] shadow-[0_40px_80px_rgba(0,0,0,0.9)] backdrop-blur-2xl overflow-hidden"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <div className="w-16 h-16 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:scale-110 transition-transform duration-500">
-            <BarChart3 size={36} className="text-[#D4AF37]" />
-          </div>
-          <span className="text-2xl font-black uppercase tracking-[0.3em] text-[#D4AF37] group-hover:text-[#F5E6AD] transition-colors">SCOUTS</span>
-          <div className="ml-auto opacity-20 group-hover:opacity-100 transition-opacity">
-            <Zap size={24} className="text-[#D4AF37]" />
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <TacticalField size={100} className="text-[#D4AF37]/50 mb-10 group-hover:scale-110 group-hover:text-[#D4AF37] transition-all duration-700" />
+          <h2 className="text-5xl font-black italic uppercase tracking-tighter">ANALISAI</h2>
+          <p className="text-[11px] text-[#D4AF37]/70 uppercase mt-6 italic font-bold tracking-[0.4em]" style={{ fontFamily: '"Archivo Black", sans-serif' }}>Scouting Inteligente</p>
         </button>
 
         <button 
-          onClick={() => onSelect('betmanager')}
-          className="group relative bg-[#0A0A0A]/90 p-10 rounded-[2.5rem] border border-[#D4AF37]/30 hover:border-[#D4AF37] transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center gap-8 overflow-hidden"
+          onClick={() => onSelect('betManager')} 
+          className="group relative bg-[#0A0A0A]/80 border border-red-500/40 rounded-[5rem] p-20 flex flex-col items-center active:scale-95 transition-all text-center hover:border-red-500 shadow-[0_40px_80px_rgba(0,0,0,0.9)] backdrop-blur-2xl overflow-hidden"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <div className="w-16 h-16 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 group-hover:scale-110 transition-transform duration-500">
-            <CircleDollarSign size={36} className="text-[#D4AF37]" />
-          </div>
-          <span className="text-2xl font-black uppercase tracking-[0.3em] text-[#D4AF37] group-hover:text-[#F5E6AD] transition-colors">BET MANAGER</span>
-          <div className="ml-auto opacity-20 group-hover:opacity-100 transition-opacity">
-            <Zap size={24} className="text-[#D4AF37]" />
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-br from-red-500/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <MarketFootball size={100} className="mb-10 group-hover:scale-110 transition-all duration-700" />
+          <h2 className="text-5xl font-black italic uppercase tracking-tighter">Bet Manager</h2>
+          <p className="text-[11px] text-red-500/70 uppercase mt-6 italic font-bold tracking-[0.4em]" style={{ fontFamily: '"Archivo Black", sans-serif' }}>Gestão de Banca</p>
         </button>
       </div>
     </div>
   </div>
 );
 
-// Componente Auxiliar para renderizar as listas de Top 3
-function RankingBox({ titulo, dados, destaque = false, cor = "red", tipo = "none" }: { titulo: string, dados: any[], destaque?: boolean, cor?: "red" | "neutral", tipo?: "chute" | "none" }) {
-  const bgClass = cor === "red" ? "bg-neutral-900/40" : "bg-black/40";
-  const titleColor = destaque ? "text-amber-400" : (cor === "red" ? "text-red-400" : "text-neutral-400");
-
-  const calcularLinhaSegura = (valorMedio: string, tipo: string) => {
-    const numero = parseFloat(valorMedio);
-    let linhaCalculada = numero * 0.66; 
-    
-    if (tipo === 'chute') {
-      linhaCalculada = Math.floor(linhaCalculada) > 0 ? Math.floor(linhaCalculada) + 0.5 : 0.5;
-      return `Over ${linhaCalculada}`;
-    }
-    return null;
-  };
-
-  return (
-    <div className={`${bgClass} rounded-[2rem] p-6 border border-white/5 h-full transition-all hover:border-red-500/30 hover:bg-neutral-900/70 group shadow-2xl backdrop-blur-sm`}>
-      <h5 className={`${titleColor} font-black mb-6 text-[12px] uppercase tracking-widest flex items-center gap-3 border-b border-white/5 pb-4`}>
-        <div className={`w-2 h-2 rounded-full ${destaque ? 'bg-amber-500 shadow-[0_0_10px_#f59e0b]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'}`}></div>
-        {titulo}
-      </h5>
-      <ul className="space-y-4">
-        {dados.map((jog, index) => {
-          const isHot = tipo === 'chute' && parseFloat(jog.valor) >= 1.5;
-          const linhaSegura = isHot ? calcularLinhaSegura(jog.valor, 'chute') : null;
-
-          return (
-            <li key={index} className={`flex items-center justify-between text-sm group/item ${isHot ? 'bg-emerald-500/5 p-3 rounded-2xl border border-emerald-500/10' : ''}`}>
-              <div className="flex items-center gap-4 text-neutral-200">
-                <div className="w-7 h-7 rounded-xl bg-neutral-800 flex items-center justify-center text-[11px] font-black text-neutral-500 border border-white/5 group-hover/item:bg-red-600/20 group-hover/item:text-red-500 transition-colors">
-                  {index + 1}
-                </div>
-                <span className="text-lg leading-none opacity-80">{jog.pais}</span>
-                <span className="truncate max-w-[160px] font-black group-hover/item:text-white transition-colors tracking-tight text-base">{jog.nome}</span>
-              </div>
-              <div className="flex items-center justify-end gap-4">
-                {linhaSegura && <SeloAposta texto={linhaSegura} />}
-                <span className={`font-mono font-black text-xl ${destaque ? 'text-amber-400' : 'text-white'} drop-shadow-sm`}>
-                  {jog.valor}
-                </span>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
 export default function App() {
-  const painelRef = useRef<HTMLDivElement>(null);
-  const [loading, setLoading] = useState(false);
-  const [equipeAtual, setEquipeAtual] = useState('FLAMENGO');
-  const [competicaoAtual, setCompeticaoAtual] = useState('');
-  const [competicoesDisponiveis, setCompeticoesDisponiveis] = useState<{id: string, name: string}[]>([]);
-  const [activeTab, setActiveTab] = useState<'scout' | 'betmanager'>('scout');
-  const [currentView, setCurrentView] = useState<'menu' | 'app'>('menu');
-  const [dados, setDados] = useState<any>(null);
+  const [activeApp, setActiveApp] = useState<'menu' | 'analisai' | 'betManager'>('menu');
+  const [requestCount, setRequestCount] = useState(() => Number(localStorage.getItem('api_quota_final_v2') || 0));
 
-  // Busca as competições disponíveis para a equipe
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [isAiSyncing, setIsAiSyncing] = useState(false);
-  const [syncSuccess, setSyncSuccess] = useState(false);
-
-  const sincronizarCompeticoes = async () => {
-    setIsSyncing(true);
-    try {
-      const response = await fetch('/api/sync-local', { method: 'POST' });
-      const data = await response.json();
-      if (data.success) {
-        // Recarrega os dados do time atual após sincronizar
-        await buscarCompeticoes(equipeAtual);
-        alert(`Sincronizado com sucesso! Total de registros no banco: ${data.totalRecords}`);
-      } else {
-        alert(`Aviso: ${data.erro || 'Erro desconhecido'}`);
-      }
-    } catch (error) {
-      console.error("Erro ao sincronizar:", error);
-      alert("Erro ao sincronizar localmente. Verifique se o arquivo competitions/README.md existe.");
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const sincronizarIA = async () => {
-    setIsAiSyncing(true);
-    let count = 0;
-    try {
-      console.log("🚀 Iniciando sincronização via IA no frontend...");
-      for (const equipe of EQUIPES_MONITORADAS) {
-        const novosDados = await buscarDadosNaIA(equipe);
-        if (novosDados) {
-          const compId = novosDados.campeonato?.toUpperCase().replace(/\s/g, '_') || 'GERAL';
-          await fetch('/api/save-scout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ teamId: equipe, compId, data: novosDados })
-          });
-          count++;
-        }
-        // Delay para evitar rate limit
-        await new Promise(r => setTimeout(r, 1000));
-      }
-      
-      // Salva a data da última sincronização
-      await fetch('/api/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: 'last_ai_sync', value: new Date().toISOString() })
-      });
-
-      alert(`Sincronização via IA concluída! ${count} equipes atualizadas.`);
-      setSyncSuccess(true);
-      setTimeout(() => setSyncSuccess(false), 5000);
-      await buscarCompeticoes(equipeAtual);
-    } catch (error) {
-      console.error("Erro ao sincronizar IA:", error);
-      alert("Erro durante a sincronização via IA.");
-    } finally {
-      setIsAiSyncing(false);
-    }
-  };
-
-  const buscarCompeticoes = async (teamId: string) => {
-    console.log(`Buscando competições para: ${teamId}`);
-    setLoading(true);
-    try {
-      const resposta = await fetch(`/api/competitions/${teamId}`);
-      if (!resposta.ok) throw new Error("Erro ao buscar competições");
-      const comps = await resposta.json();
-      console.log("Competições recebidas:", comps);
-      setCompeticoesDisponiveis(comps);
-      if (comps.length > 0) {
-        setCompeticaoAtual(comps[0].id);
-        await buscarDadosScout(teamId, comps[0].id);
-      } else {
-        setCompeticaoAtual('');
-        setDados(null);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar competições:", error);
-      setCompeticoesDisponiveis([]);
-      setCompeticaoAtual('');
-      setDados(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Busca os dados de scout para a equipe e competição selecionadas
-  const buscarDadosScout = async (teamId: string, compId: string) => {
-    setLoading(true);
-    try {
-      const resposta = await fetch(`/api/scouts/${teamId}/${compId}`);
-      if (!resposta.ok) throw new Error("Erro ao buscar dados de scout");
-      const novosDados = await resposta.json();
-      setDados(novosDados);
-    } catch (error) {
-      console.error(error);
-      setDados(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Efeito inicial
-  useEffect(() => {
-    document.body.style.overflowX = 'hidden';
-    buscarCompeticoes('FLAMENGO');
-
-    // Verifica se precisa de sincronização automática (semanal)
-    const checkAutoSync = async () => {
-      try {
-        const res = await fetch('/api/config/last_ai_sync');
-        const { value } = await res.json();
-        const lastSync = value ? new Date(value) : null;
-        const now = new Date();
-        
-        // Se nunca sincronizou ou faz mais de 7 dias
-        if (!lastSync || (now.getTime() - lastSync.getTime() > 7 * 24 * 60 * 60 * 1000)) {
-          console.log("⏰ Sincronização semanal necessária...");
-          // Opcional: Notificar o usuário ou fazer automático
-          // Por segurança, vamos apenas sugerir ou fazer se o usuário estiver ocioso
-        }
-      } catch (e) {}
-    };
-    checkAutoSync();
-
-    return () => {
-      document.body.style.overflowX = '';
-    };
+  const currentFormattedDate = useMemo(() => {
+    const d = new Date();
+    return d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase();
   }, []);
 
-  const handleTeamChange = (teamId: string) => {
-    setEquipeAtual(teamId);
-    buscarCompeticoes(teamId);
-  };
-
-  const handleCompChange = (compId: string) => {
-    setCompeticaoAtual(compId);
-    buscarDadosScout(equipeAtual, compId);
-  };
-
-  const exportarImagem = async () => {
-    if (!painelRef.current) return;
-    setLoading(true);
-    try {
-      const dataUrl = await toJpeg(painelRef.current, {
-        backgroundColor: '#0a0a0a',
-        pixelRatio: 2,
-        style: {
-          transform: 'scale(1)',
-          transformOrigin: 'top left'
-        }
-      });
-      const link = document.createElement('a');
-      link.download = `analisai-${equipeAtual.toLowerCase()}-${new Date().getTime()}.jpg`;
-      link.href = dataUrl;
-      link.click();
-    } catch (err) {
-      console.error("Erro ao exportar:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    // Sync request count from localStorage
+    const interval = setInterval(() => {
+      const count = Number(localStorage.getItem('api_quota_final_v2') || 0);
+      setRequestCount(count);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <>
-      {currentView === 'menu' ? (
-        <Menu onSelect={(tab) => { setActiveTab(tab); setCurrentView('app'); }} />
-      ) : (
-        <div className="min-h-screen bg-slate-950 p-4 md:p-8 font-sans text-white flex flex-col items-center selection:bg-red-500/30">
-          <button onClick={() => setCurrentView('menu')} className="fixed top-4 left-4 z-50 bg-neutral-900/80 p-3 rounded-full border border-white/10 hover:bg-red-900/50 transition-all">
-            <ChevronDown size={20} className="rotate-90" />
-          </button>
+    <div className="min-h-screen bg-[#020305] text-white font-sans selection:bg-[#D9A520] relative overflow-hidden">
       
-      {/* HEADER E NAVEGAÇÃO PRINCIPAL */}
-      <div className="w-full max-w-6xl mb-10 flex flex-col md:flex-row justify-between items-center bg-slate-900/40 p-8 rounded-[3rem] border border-slate-800 shadow-[0_30px_60px_rgba(0,0,0,0.8)] backdrop-blur-xl relative overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-        
-        <LogoPremium />
-        
-        <AnimatePresence>
-          {syncSuccess && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute top-full mt-4 bg-emerald-500 text-white px-6 py-2 rounded-full font-black uppercase text-[10px] tracking-widest shadow-lg shadow-emerald-500/20 z-50"
-            >
-              Sincronização Concluída com Sucesso!
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        <div className="flex items-center gap-4 mt-8 md:mt-0">
-          <button 
-            onClick={sincronizarCompeticoes}
-            disabled={isSyncing}
-            className={`p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-500 group/sync ${isSyncing ? 'animate-spin opacity-50' : ''}`}
-            title="Sincronizar Competições"
-          >
-            <RefreshCw size={20} className="text-white/50 group-hover/sync:text-red-500 transition-colors" />
-          </button>
+      <style dangerouslySetInnerHTML={{ __html: `
+        *::-webkit-scrollbar { display: none !important; }
+        * { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .bg-pattern { background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d9a520' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+        .glass-gold { background: rgba(217, 165, 32, 0.02); backdrop-filter: blur(20px); border: 1px solid rgba(217, 165, 32, 0.1); }
+        .gold-bg { background: linear-gradient(135deg, #D9A520 0%, #A67C00 100%); }
+        .gold-text { color: #D9A520; }
+      `}} />
 
-          <button 
-            onClick={sincronizarIA}
-            disabled={isAiSyncing}
-            className={`p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all duration-500 group/sync ${isAiSyncing ? 'animate-spin opacity-50' : ''}`}
-            title="Sincronizar via IA (Gemini)"
-          >
-            <Zap size={20} className={`text-white/50 group-hover/sync:text-amber-500 transition-colors ${isAiSyncing ? 'animate-pulse' : ''}`} />
-          </button>
+      <div className="fixed inset-0 bg-pattern opacity-40 pointer-events-none" />
 
-          <div className="flex bg-black/60 rounded-[2rem] p-2 border border-[#D4AF37]/20 shadow-inner">
-            {activeTab === 'scout' ? (
-              <button 
-                onClick={() => setActiveTab('scout')}
-                className="flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 bg-gradient-to-b from-[#D4AF37] to-[#B8860B] text-[#0A0A0A] shadow-[0_8px_25px_rgba(212,175,55,0.3)] scale-105"
-              >
-                <BarChart3 size={18} />
-                Scout
-              </button>
-            ) : (
-              <button 
-                onClick={() => setActiveTab('betmanager')}
-                className="flex items-center gap-3 px-10 py-4 rounded-2xl text-[12px] font-black uppercase tracking-[0.25em] transition-all duration-500 bg-gradient-to-b from-[#D4AF37] to-[#B8860B] text-[#0A0A0A] shadow-[0_8px_25px_rgba(212,175,55,0.3)] scale-105"
-              >
-                <CircleDollarSign size={18} />
-                Bet Manager
-              </button>
-            )}
-          </div>
-        </div>
+      {/* --- STATUS BAR --- */}
+      <div className="fixed top-0 w-full bg-black/90 backdrop-blur-lg border-b border-white/5 py-2 px-6 flex justify-between items-center z-[100] text-[8px] font-black uppercase italic tracking-widest leading-none">
+         <div className="flex items-center gap-4">
+            <span className="gold-text flex items-center gap-1"><Key size={10}/> API: def74ab4...</span>
+            <span className="text-gray-400">QUOTA: <span className="gold-text">{requestCount}/100</span></span>
+         </div>
+         <div className="text-gray-400 bg-white/5 px-4 py-1.5 rounded-full border border-white/5 flex items-center gap-2">
+            <Calendar size={10} className="gold-text"/>
+            {currentFormattedDate}
+         </div>
+         <div className="flex items-center gap-2 text-green-500">
+            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_green]" /> SISTEMA ONLINE
+         </div>
       </div>
 
-      {activeTab === 'scout' ? (
-        <>
-          {/* CONTROLES DE EQUIPE E COMPETIÇÃO */}
-          <div className="w-full max-w-6xl mb-12 flex flex-col items-center gap-8 bg-[#0A0A0A]/40 p-8 rounded-[2.5rem] border border-[#D4AF37]/20 backdrop-blur-md">
-            <div className="flex flex-col md:flex-row gap-6 w-full justify-center">
-              <div className="relative group min-w-[280px] flex-1 md:flex-none">
-                <label className="absolute -top-3 left-6 bg-[#050505] px-3 text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.3em] z-10">Equipe Selecionada</label>
-                <select 
-                  className="appearance-none bg-black/40 border border-[#D4AF37]/20 text-white font-black text-base rounded-2xl focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] block px-6 py-5 pr-14 outline-none transition-all hover:border-[#D4AF37]/40 cursor-pointer w-full shadow-inner"
-                  onChange={(e) => handleTeamChange(e.target.value)}
-                  value={equipeAtual}
-                >
-                  <optgroup label="Brasil" className="bg-neutral-900">
-                    <option value="FLAMENGO">Flamengo</option>
-                    <option value="PALMEIRAS">Palmeiras</option>
-                    <option value="BOTAFOGO">Botafogo</option>
-                  </optgroup>
-                  <optgroup label="Europa" className="bg-neutral-900">
-                    <option value="REAL_MADRID">Real Madrid</option>
-                    <option value="MAN_CITY">Manchester City</option>
-                    <option value="BAYERN">Bayern de Munique</option>
-                    <option value="PSG">PSG</option>
-                  </optgroup>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-[#D4AF37]/60 group-hover:text-[#D4AF37] transition-colors">
-                  <ChevronDown size={22} />
-                </div>
-              </div>
+      <AnimatePresence mode="wait">
+        {activeApp === 'menu' && (
+          <motion.div
+            key="menu"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <Menu onSelect={(tab) => setActiveApp(tab)} />
+          </motion.div>
+        )}
 
-              <div className="relative group min-w-[280px] flex-1 md:flex-none">
-                <label className="absolute -top-3 left-6 bg-[#050505] px-3 text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.3em] z-10">Competição Ativa</label>
-                <select 
-                  className="appearance-none bg-black/40 border border-[#D4AF37]/20 text-white font-black text-base rounded-2xl focus:ring-2 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37] block px-6 py-5 pr-14 outline-none transition-all hover:border-[#D4AF37]/40 cursor-pointer w-full shadow-inner disabled:opacity-50 disabled:cursor-not-allowed"
-                  onChange={(e) => handleCompChange(e.target.value)}
-                  value={competicaoAtual}
-                  disabled={competicoesDisponiveis.length === 0 || loading}
-                >
-                  {loading && competicoesDisponiveis.length === 0 ? (
-                    <option value="">Sincronizando...</option>
-                  ) : competicoesDisponiveis.length === 0 ? (
-                    <option value="">Nenhuma competição</option>
-                  ) : (
-                    competicoesDisponiveis.map(comp => (
-                      <option key={comp.id} value={comp.id}>{comp.name}</option>
-                    ))
-                  )}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-5 text-[#D4AF37]/60 group-hover:text-[#D4AF37] transition-colors">
-                  {loading ? (
-                    <RefreshCw size={22} className="animate-spin" />
-                  ) : (
-                    <ChevronDown size={22} />
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap justify-center gap-6">
-            <button 
-              onClick={() => buscarDadosScout(equipeAtual, competicaoAtual)}
-              disabled={loading || !competicaoAtual}
-              className={`font-black uppercase text-[12px] tracking-[0.25em] py-5 px-10 rounded-2xl transition-all flex items-center gap-4 shadow-2xl active:scale-95 ${loading ? 'bg-[#D4AF37]/20 text-[#D4AF37]/50 cursor-not-allowed border border-[#D4AF37]/30' : 'bg-gradient-to-b from-[#D4AF37] to-[#B8860B] hover:from-[#E2C275] hover:to-[#D4AF37] text-[#0A0A0A] shadow-[#D4AF37]/20'}`}
-            >
-              {loading ? (
-                <RefreshCw className="animate-spin" size={20} />
-              ) : (
-                <RefreshCw size={20} />
-              )}
-              {loading ? 'Sincronizando...' : 'Atualizar Inteligência'}
-            </button>
-            
-            <button 
-              onClick={exportarImagem}
-              disabled={loading || !dados}
-              className="bg-neutral-800/50 hover:bg-neutral-800 border border-white/5 text-white font-black uppercase text-[12px] tracking-[0.25em] py-5 px-10 rounded-2xl transition-all flex items-center gap-4 disabled:opacity-30 active:scale-95 shadow-xl"
-            >
-              <Download size={20} className="text-[#D4AF37]" />
-              Exportar Scout
-            </button>
-          </div>
-        </div>
+        {activeApp === 'analisai' && (
+          <motion.div
+            key="analisai"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+          >
+            <Scouts onBack={() => setActiveApp('menu')} />
+          </motion.div>
+        )}
 
-      {/* PAINEL DE ESTATÍSTICAS (O "CANVAS" A SER EXPORTADO) */}
-      {dados ? (
-        <div 
-          id="scout-panel"
-          ref={painelRef}
-          className="w-full max-w-6xl bg-[#0a0a0a] p-10 md:p-16 rounded-[4rem] shadow-[0_60px_120px_rgba(0,0,0,0.9)] border border-[#D4AF37]/20 relative overflow-hidden"
-        >
-          {/* Efeitos de Fundo Premium */}
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-[#D4AF37]/10 via-transparent to-transparent pointer-events-none"></div>
-          <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-[#B8860B]/5 via-transparent to-transparent pointer-events-none"></div>
-          <div className="absolute inset-0 opacity-[0.04] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-
-          {/* CABEÇALHO DO CARD */}
-          <div className="text-center mb-16 border-b border-[#D4AF37]/10 pb-14 relative z-10">
-            <div className="flex flex-col items-center justify-center gap-8">
-              <div className="relative group">
-                <div className="absolute inset-0 bg-[#D4AF37] rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity duration-1000"></div>
-                {CLUB_CRESTS[equipeAtual] && (
-                  <img 
-                    src={CLUB_CRESTS[equipeAtual]} 
-                    alt={`${equipeAtual} crest`} 
-                    className="w-32 h-32 md:w-44 md:h-44 object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.6)] relative z-10 transform transition-all group-hover:scale-110 group-hover:rotate-6 duration-700"
-                    referrerPolicy="no-referrer"
-                  />
-                )}
-              </div>
-              <div className="flex flex-col gap-3">
-                <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[#F5E6AD] via-[#D4AF37] to-[#B8860B] drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)] uppercase italic" style={{ fontFamily: theme.fonts.display }}>
-                  {equipeAtual}
-                </h2>
-                <div className="flex items-center justify-center gap-4">
-                  <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-[#D4AF37]"></div>
-                  <p className="text-[#D4AF37] font-black text-base tracking-[0.5em] uppercase">{dados.campeonato}</p>
-                  <div className="h-[2px] w-12 bg-gradient-to-l from-transparent to-[#D4AF37]"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* SEÇÃO 1: MÉDIAS GERAIS */}
-          <div className="mb-16 relative z-10">
-            <div className="flex items-center gap-6 mb-10">
-              <div className="w-14 h-14 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 shadow-lg">
-                <LayoutGrid className="text-[#D4AF37]" size={28} />
-              </div>
-              <h3 className="text-3xl font-black uppercase tracking-tighter text-white italic">
-                Performance <span className="text-[#D4AF37]">Analítica</span>
-              </h3>
-              <div className="flex-grow h-[1px] bg-gradient-to-r from-[#D4AF37]/20 via-[#D4AF37]/5 to-transparent"></div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              {/* Tabela Ataque */}
-              <div className="bg-neutral-900/40 rounded-[3rem] p-10 border border-[#D4AF37]/10 shadow-2xl backdrop-blur-md relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-15 transition-all duration-700 transform group-hover:scale-125">
-                  <Target size={120} className="text-[#D4AF37]" />
-                </div>
-                <h4 className="text-[#D4AF37] font-black text-sm uppercase tracking-[0.25em] mb-10 flex items-center gap-4 border-b border-[#D4AF37]/10 pb-6">
-                  <Target size={22} className="text-[#D4AF37]" /> Ofensividade & Precisão
-                </h4>
-                <div className="space-y-7">
-                  <div className="flex justify-between items-center group/row">
-                    <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Gols marcados</span>
-                    <span className="font-black text-3xl text-[#0A0A0A] bg-gradient-to-b from-[#D4AF37] to-[#B8860B] px-6 py-2 rounded-2xl border border-[#E2C275]/20 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">{dados.medias.gols}</span>
-                  </div>
-                  <div className="flex justify-between items-center group/row">
-                    <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Finalizações totais</span>
-                    <span className="font-black text-2xl text-white">{dados.medias.finalizacoes}</span>
-                  </div>
-                  <div className="flex justify-between items-center group/row">
-                    <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Chutes no Alvo</span>
-                    <div className="flex items-center gap-4">
-                      {parseFloat(dados.medias.chutesGol) > 5.0 && <SeloAposta texto="Elite Tier" />}
-                      <span className="font-black text-2xl text-white">{dados.medias.chutesGol}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center group/row">
-                    <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Big Chances</span>
-                    <span className="font-black text-2xl text-white">{dados.medias.grandesChances}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tabela Controle */}
-              <div className="bg-neutral-900/40 rounded-[3rem] p-10 border border-[#D4AF37]/10 shadow-2xl backdrop-blur-md relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-15 transition-all duration-700 transform group-hover:scale-125">
-                  <Activity size={120} className="text-[#D4AF37]" />
-                </div>
-                <h4 className="text-[#D4AF37] font-black text-sm uppercase tracking-[0.25em] mb-10 flex items-center gap-4 border-b border-[#D4AF37]/10 pb-6">
-                  <Activity size={22} className="text-[#D4AF37]" /> Domínio & Posicionamento
-                </h4>
-                <div className="space-y-7">
-                  <div className="flex justify-between items-center group/row">
-                    <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Posse de bola</span>
-                    <span className="font-black text-3xl text-[#D4AF37] italic drop-shadow-[0_0_10px_rgba(212,175,55,0.3)]">{dados.medias.posse}</span>
-                  </div>
-                  <div className="flex justify-between items-center group/row">
-                    <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Escanteios</span>
-                    <div className="flex items-center gap-4">
-                      {parseFloat(dados.medias.escanteios) >= 6.0 && <SeloAposta texto="Over 5.5" />}
-                      <span className="font-black text-2xl text-white">{dados.medias.escanteios}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center group/row">
-                    <span className="text-neutral-400 font-black text-base uppercase tracking-tight group-hover/row:text-neutral-200 transition-colors">Faltas sofridas</span>
-                    <span className="font-black text-2xl text-white">{dados.medias.faltas}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* SEÇÃO 2: TOP JOGADORES - ATAQUE */}
-          <div className="mb-16 relative z-10">
-            <div className="flex items-center gap-6 mb-10">
-              <div className="w-14 h-14 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20 shadow-lg">
-                <Users className="text-[#D4AF37]" size={28} />
-              </div>
-              <h3 className="text-3xl font-black uppercase tracking-tighter text-white italic">
-                Elite <span className="text-[#D4AF37]">Ofensiva</span>
-              </h3>
-              <div className="flex-grow h-[1px] bg-gradient-to-r from-[#D4AF37]/20 via-[#D4AF37]/5 to-transparent"></div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <RankingBox titulo="👟 Finalizações" dados={dados.ataque.finalizacoesTotais} />
-              <RankingBox titulo="🎯 Chutes no Gol" dados={dados.ataque.chutesNoGol} />
-              <RankingBox titulo="🚀 Fora da Área" dados={dados.ataque.finalizacoesFora} />
-              <RankingBox titulo="☄️ Gols Longos" dados={dados.ataque.golsFora} />
-              <RankingBox titulo="🚩 Cruzamentos" dados={dados.ataque.escanteiosCruzamentos} />
-              <RankingBox titulo="⭐ Rating Premium" dados={dados.ataque.rating} destaque />
-            </div>
-          </div>
-
-          {/* SEÇÃO 3: TOP JOGADORES - DEFESA */}
-          <div className="relative z-10">
-            <div className="flex items-center gap-6 mb-10">
-              <div className="w-14 h-14 rounded-2xl bg-neutral-800 flex items-center justify-center border border-white/10 shadow-lg">
-                <ShieldCheck className="text-neutral-400" size={28} />
-              </div>
-              <h3 className="text-3xl font-black uppercase tracking-tighter text-white italic">
-                Muralha <span className="text-neutral-500">Defensiva</span>
-              </h3>
-              <div className="flex-grow h-[1px] bg-gradient-to-r from-white/10 via-white/5 to-transparent"></div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <RankingBox titulo="🛑 Desarmes" dados={dados.defesa.desarmes} cor="neutral" />
-              <RankingBox titulo="✂️ Interceptações" dados={dados.defesa.interceptacoes} cor="neutral" />
-              <RankingBox titulo="🛡️ Rebatidas" dados={dados.defesa.cortes} cor="neutral" />
-            </div>
-          </div>
-
-          {/* Rodapé da Imagem */}
-          <div className="mt-20 pt-12 border-t border-[#D4AF37]/10 text-center relative z-10 flex flex-col items-center gap-6">
-             <div className="flex items-center gap-10">
-                <div className="flex items-center gap-3">
-                  <PieChart size={18} className="text-[#D4AF37]" />
-                  <span className="text-[11px] font-black text-neutral-500 uppercase tracking-[0.3em]">Data Analytics</span>
-                </div>
-                <div className="w-1.5 h-1.5 bg-white/10 rounded-full"></div>
-                <div className="flex items-center gap-3">
-                  <Settings2 size={18} className="text-[#D4AF37]" />
-                  <span className="text-[11px] font-black text-neutral-500 uppercase tracking-[0.3em]">AI Powered Engine</span>
-                </div>
-             </div>
-             <p className="text-neutral-600 text-[10px] uppercase tracking-[0.5em] font-black flex items-center gap-3">
-               <span className="w-2 h-2 rounded-full bg-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.9)] animate-pulse"></span>
-               AnalisAI Intelligence System • v2.5 • {new Date().getFullYear()}
-             </p>
-          </div>
-        </div>
-      ) : (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-6xl bg-neutral-900/20 p-40 rounded-[4rem] border border-dashed border-white/10 text-center backdrop-blur-sm flex flex-col items-center gap-8"
-        >
-          <div className="w-24 h-24 rounded-full bg-neutral-800/50 flex items-center justify-center border border-white/5 animate-pulse">
-            <Search size={48} className="text-neutral-600" />
-          </div>
-          <div className="flex flex-col gap-3">
-            <p className="text-neutral-400 font-black uppercase text-sm tracking-[0.4em]">Aguardando Seleção de Dados</p>
-            <p className="text-neutral-600 text-base max-w-md">Selecione uma equipe e competição no menu superior para processar o relatório de inteligência avançada.</p>
-            
-            {competicoesDisponiveis.length === 0 && (
-              <div className="mt-12 p-10 bg-red-600/5 rounded-[3rem] border border-red-500/10 backdrop-blur-xl">
-                <p className="text-red-400 font-black uppercase text-xs tracking-[0.3em] mb-6">Nenhum dado encontrado para {equipeAtual}</p>
-                <div className="flex flex-wrap justify-center gap-6">
-                  <button 
-                    onClick={sincronizarCompeticoes}
-                    className="px-8 py-4 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-3"
-                  >
-                    <RefreshCw size={16} /> Sincronizar Local
-                  </button>
-                  <button 
-                    onClick={sincronizarIA}
-                    className="px-8 py-4 bg-red-600/20 hover:bg-red-600/30 text-red-500 rounded-2xl border border-red-500/20 transition-all text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-3"
-                  >
-                    <Zap size={16} /> Sincronizar via IA
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </motion.div>
-      )}
-      </>
-      ) : (
-        /* SEÇÃO: ALAVANCAGEM */
-        <div className="w-full max-w-6xl bg-[#050505] rounded-[4rem] border border-white/5 shadow-[0_60px_120px_rgba(0,0,0,1)] overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-b from-red-600/5 to-transparent pointer-events-none"></div>
-          <Alavancagem />
-        </div>
-      )}
-
-      {/* Footer do App */}
-      <footer className="w-full max-w-6xl mt-16 mb-12 flex flex-col md:flex-row justify-between items-center gap-8 px-10">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-red-600/10 flex items-center justify-center border border-red-500/20 shadow-lg">
-            <ShieldCheck size={20} className="text-red-500" />
-          </div>
-          <p className="text-[11px] font-black text-neutral-600 uppercase tracking-[0.25em]">Plataforma de Inteligência Auditada</p>
-        </div>
-        
-        <div className="flex items-center gap-10">
-          <a href="#" className="text-[11px] font-black text-neutral-500 hover:text-red-500 transition-colors uppercase tracking-[0.25em] flex items-center gap-2">
-            Suporte <ExternalLink size={14} />
-          </a>
-          <a href="#" className="text-[11px] font-black text-neutral-500 hover:text-red-500 transition-colors uppercase tracking-[0.25em] flex items-center gap-2">
-            Termos <ExternalLink size={14} />
-          </a>
-          <div className="px-6 py-2 rounded-full bg-neutral-900 border border-white/5 text-[10px] font-black text-red-500 uppercase tracking-[0.3em] shadow-inner">
-            Enterprise v2.5
-          </div>
-        </div>
-      </footer>
-
+        {activeApp === 'betManager' && (
+          <motion.div
+            key="betManager"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+          >
+            <BetManager onBack={() => setActiveApp('menu')} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
-      )}
-    </>
   );
 }

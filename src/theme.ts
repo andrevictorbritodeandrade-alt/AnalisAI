@@ -13,9 +13,9 @@ export const theme = {
     borderGold: 'rgba(212, 175, 55, 0.3)',
   },
   fonts: {
-    display: '"Playfair Display", serif',
-    sans: '"Inter", sans-serif',
-    mono: '"JetBrains Mono", monospace',
+    display: '"Monoton", cursive',
+    sans: '"Archivo Black", sans-serif',
+    mono: '"Inter", sans-serif',
   },
   shadows: {
     goldGlow: '0 0 20px rgba(212, 175, 55, 0.4)',

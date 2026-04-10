@@ -205,11 +205,8 @@ const Alavancagem = () => {
         stake: currentStake, 
         ret: totalReturn, 
         profit,
-        suggestedBets: lastHouseWins.length > 0 ? lastHouseWins : [
-           { house: 'Betano', amount: nextStake * 0.7, odd: 1.57 },
-           { house: 'EstrelaBet', amount: nextStake * 0.3, odd: 3.04 }
-        ],
-        suggestedStake: nextStake
+        suggestedStake: nextStake,
+        suggestedReturn: nextStake * mData.settings.odd
       });
 
       // Se o dia teve vitórias, o próximo plano de ação será baseado nelas
@@ -309,6 +306,23 @@ APANHADO GERAL:
     updDay(dIdx, { bets: b });
   };
 
+  const addApril9thBet = () => {
+    const dIdx = 8; // April 9th is index 8 (0-indexed)
+    const newBet = {
+      house: 'EstrelaBet',
+      ticketNumber: '4811515549',
+      stake: 0.96,
+      odd: 4.74,
+      status: 'pending',
+      isMultiple: true,
+      match: 'Freiburg/Celta, Bologna/Aston, Porto/Nottingham',
+      selections: 'Freiburg vs Celta: Escanteios > 6.5, Gols > 1.5; Bologna vs Aston: Escanteios > 6.5, Gols > 1.5; Porto vs Nottingham: Gols > 1.5, Escanteios > 6.5'
+    };
+    const b = [...(mData.days[dIdx].bets || []), newBet];
+    updDay(dIdx, { bets: b });
+    alert("Aposta do dia 09/04 adicionada com sucesso!");
+  };
+
   const handleImageUpload = async (file: File, dIdx: number, bIdx: number | 'day', house: string) => {
     setUploadingImage({ dayIdx: dIdx, betIdx: bIdx });
 
@@ -393,6 +407,12 @@ APANHADO GERAL:
               <User size={28} className="text-neutral-500" />
            </div>
         </div>
+        <button 
+          onClick={addApril9thBet}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2 px-4 rounded-xl text-xs uppercase tracking-widest"
+        >
+          Add Aposta 09/04
+        </button>
       </header>
 
       {/* Meses */}
@@ -493,26 +513,40 @@ APANHADO GERAL:
                                  const betReturn = (bet.stake || 0) * (bet.odd || 0);
                                  const risk = getOddRisk(bet.odd || 0, bet.isMultiple);
                                  return (
-                                   <div key={bIdx} className={`rounded-[2.5rem] border-2 transition-all shadow-sm ${bet.status === 'won' ? 'bg-neutral-900 border-emerald-900/50' : bet.status === 'lost' ? 'bg-neutral-900 border-red-900/50' : 'bg-black/40 border-white/5'}`}>
-                                      <div className="p-6 cursor-pointer" onClick={() => setExpandedBet(isExpanded ? null : [i, bIdx])}>
-                                         <div className="flex justify-between items-start mb-5">
-                                            {bet.house === 'Betano' ? <BetanoIcon /> : bet.house === 'EstrelaBet' ? <EstrelaIcon /> : bet.house === 'Vupibet' ? <VupibetIcon /> : <SportingbetIcon />}
-                                            <div className="flex flex-col items-end gap-1.5">
-                                               <div className="flex flex-col items-end leading-none border-b border-white/5 pb-2 w-full">
-                                                  <span className="text-[8px] text-neutral-500 font-black uppercase">Entrada</span>
-                                                  <span className="text-[12px] font-black text-white leading-none">{fCurrency(bet.stake)}</span>
-                                               </div>
-                                               <div className="flex flex-col items-end leading-none pt-1">
-                                                  <span className="text-[8px] text-neutral-500 font-black uppercase">Retorno</span>
-                                                  <span className={`text-[13px] font-black leading-none font-mono italic ${risk.color}`}>@ {bet.odd} → {fCurrency(betReturn)} <span className="opacity-70 text-[10px] ml-1">(+{fCurrency(betReturn - (bet.stake || 0))})</span></span>
-                                                  {!bet.isMultiple && <span className={`text-[8px] font-black uppercase mt-1 px-2 py-0.5 rounded ${risk.bg} ${risk.color}`}>{risk.label}</span>}
-                                               </div>
+                                    <div key={bIdx} className={`rounded-[2.5rem] border-2 transition-all shadow-sm ${bet.status === 'won' ? 'bg-neutral-900 border-emerald-900/50' : bet.status === 'lost' ? 'bg-neutral-900 border-red-900/50' : 'bg-black/40 border-white/5'}`}>
+                                      <div className="p-6 space-y-4">
+                                         {/* Header: House and Odd */}
+                                         <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                                            <div className="flex items-center gap-2">
+                                               {bet.house === 'Betano' ? <BetanoIcon /> : bet.house === 'EstrelaBet' ? <EstrelaIcon /> : bet.house === 'Vupibet' ? <VupibetIcon /> : <SportingbetIcon />}
+                                            </div>
+                                            <span className="text-sm font-black text-emerald-500 font-mono">@ {bet.odd}</span>
+                                         </div>
+                                         
+                                         {/* Values: Stake and Return */}
+                                         <div className="grid grid-cols-2 gap-4">
+                                            <div className="bg-black/40 rounded-xl p-3 border border-white/5 flex flex-col items-center text-center">
+                                               <span className="text-[9px] text-neutral-500 font-black uppercase tracking-widest mb-1">Valor Apostado</span>
+                                               <span className="text-lg font-black text-white leading-none">{fCurrency(bet.stake)}</span>
+                                            </div>
+                                            <div className="bg-black/40 rounded-xl p-3 border border-white/5 flex flex-col items-center text-center">
+                                               <span className="text-[9px] text-neutral-500 font-black uppercase tracking-widest mb-1">Retorno Potencial</span>
+                                               <span className="text-lg font-black text-[#D4AF37] leading-none">{fCurrency(betReturn)}</span>
                                             </div>
                                          </div>
-                                         <div className="flex justify-between items-center pt-4 border-t border-white/5">
-                                            <p className="text-[12px] font-black text-white truncate uppercase italic tracking-tighter">{bet.match}</p>
-                                            <ChevronDown size={18} className={`text-neutral-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+
+                                         {/* Selections */}
+                                         <div className="bg-black/40 rounded-xl p-4 border border-white/5">
+                                            <span className="text-[9px] text-neutral-500 font-black uppercase tracking-widest block mb-2 text-center">Seleções do Bilhete</span>
+                                            <p className="text-xs font-bold text-neutral-300 whitespace-pre-wrap leading-relaxed text-center">
+                                               {bet.selections || bet.match || 'Nenhuma seleção detalhada.'}
+                                            </p>
                                          </div>
+
+                                         {/* Actions (Expand for edit) */}
+                                         <button onClick={() => setExpandedBet(isExpanded ? null : [i, bIdx])} className="w-full py-3 text-[10px] font-black uppercase text-neutral-500 hover:text-white flex items-center justify-center gap-2 transition-colors border-t border-white/5 mt-2">
+                                            {isExpanded ? 'OCULTAR EDIÇÃO' : 'EDITAR APOSTA'} <ChevronDown size={14} className={isExpanded ? 'rotate-180 transition-transform' : 'transition-transform'} />
+                                         </button>
                                       </div>
                                       {isExpanded && (
                                          <div className="px-6 pb-8 space-y-5 animate-in fade-in slide-in-from-top-2 border-t border-white/5 bg-neutral-900 rounded-b-[2.5rem]">
@@ -577,43 +611,20 @@ APANHADO GERAL:
                            </div>
                         </div>
                      ) : (
-                        <div className="flex flex-col items-center justify-center py-6 bg-[#D4AF37]/5 border-4 border-dashed border-[#D4AF37]/20 rounded-[3rem] shadow-inner relative overflow-hidden">
-                           <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12"><ArrowBigRightDash size={80} /></div>
+                        <div className="flex flex-col items-center justify-center py-8 bg-[#D4AF37]/5 border-4 border-dashed border-[#D4AF37]/20 rounded-[3rem] shadow-inner relative overflow-hidden">
                            <ArrowBigRightDash size={48} className="mb-4 text-[#D4AF37] animate-pulse" strokeWidth={3} />
-                           <h4 className="text-[12px] font-black uppercase text-[#D4AF37] tracking-widest mb-4 border-b border-[#D4AF37]/20 pb-2">PLANO DE ALAVANCAGEM</h4>
+                           <h4 className="text-[14px] font-black uppercase text-[#D4AF37] tracking-widest mb-6 border-b border-[#D4AF37]/20 pb-2 font-mecanico">PLANO DE ALAVANCAGEM</h4>
                            
-                           <div className="w-full px-8 space-y-3">
-                              {d.suggestedBets.map((sb: any, sIdx: number) => (
-                                 <div key={sIdx} className="bg-neutral-900 rounded-3xl p-4 shadow-lg border border-white/5">
-                                    <div className="flex justify-between items-center mb-1">
-                                       {sb.house === 'Betano' ? <BetanoIcon /> : sb.house === 'Vupibet' ? <VupibetIcon /> : <EstrelaIcon />}
-                                       <span className="text-[11px] font-black text-emerald-500 font-mono italic">@ {sb.odd}</span>
-                                    </div>
-                                    <div className="flex justify-between items-end">
-                                       <div className="flex flex-col">
-                                          <span className="text-[8px] text-neutral-500 font-bold uppercase tracking-tighter">Entrada</span>
-                                          <span className="text-[14px] font-black text-white leading-none">{fCurrency(sb.amount)}</span>
-                                       </div>
-                                       <div className="flex flex-col items-end">
-                                          <span className="text-[8px] text-neutral-500 font-bold uppercase tracking-tighter">Retorno</span>
-                                          <span className="text-[14px] font-black text-[#D4AF37] leading-none">{fCurrency(sb.amount * sb.odd)} <span className="text-[#D4AF37]/70 text-[10px] ml-1">(+{fCurrency((sb.amount * sb.odd) - sb.amount)})</span></span>
-                                       </div>
-                                    </div>
-                                 </div>
-                              ))}
-                              
-                              <div className="pt-4 border-t-2 border-dashed border-[#D4AF37]/20 mt-2">
-                                 <div className="flex justify-between items-center text-neutral-300">
-                                    <span className="text-[10px] font-black uppercase tracking-widest">TOTAL ALAVANCAGEM</span>
-                                    <span className="text-lg font-black text-white">{fCurrency(d.suggestedStake)}</span>
-                                 </div>
-                                 <div className="flex justify-between items-center mt-1 text-emerald-500">
-                                    <span className="text-[9px] font-bold uppercase">META DE RETORNO</span>
-                                    <span className="text-xl font-black">{fCurrency(totalSuggestedReturn)}</span>
-                                 </div>
+                           <div className="w-full px-8 space-y-4">
+                              <div className="bg-neutral-900 rounded-3xl p-6 shadow-lg border border-white/5 flex flex-col items-center text-center">
+                                 <span className="text-[10px] text-neutral-500 font-black uppercase tracking-widest mb-1">Entrada Sugerida</span>
+                                 <span className="text-3xl font-black text-white mb-4">{fCurrency(d.suggestedStake)}</span>
+                                 
+                                 <span className="text-[10px] text-neutral-500 font-black uppercase tracking-widest mb-1">Meta de Retorno (@ {mData.settings.odd})</span>
+                                 <span className="text-2xl font-black text-[#D4AF37]">{fCurrency(d.suggestedReturn)}</span>
                               </div>
                            </div>
-                           <p className="mt-6 text-[8px] font-bold text-[#D4AF37] uppercase italic px-10 text-center leading-tight">Mande o print das entradas para validar o plano composto.</p>
+                           <p className="mt-6 text-[10px] font-bold text-[#D4AF37] uppercase italic px-10 text-center leading-tight">Adicione suas apostas reais para atualizar o plano.</p>
                         </div>
                      )}
                   </div>

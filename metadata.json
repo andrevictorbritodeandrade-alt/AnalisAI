@@ -1,5 +1,5 @@
 {
-  "name": "AnalisAI - Football Scouting Dashboard",
-  "description": "A professional football scouting dashboard with real-time statistics, player rankings, and image export capabilities.",
+  "name": "ANALISAÍ & BETMANAGER",
+  "description": "Um PWA para ANALISAÍ & BETMANAGER com funcionamento offline.",
   "requestFramePermissions": []
 }

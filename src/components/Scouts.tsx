@@ -12,6 +12,8 @@ import { toJpeg } from 'html-to-image';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 
+import PartidasDoDia from './PartidasDoDia';
+
 // --- CONFIGURAÇÕES DE API (CHAVE REAL) ---
 const API_FOOTBALL_KEY = 'def74ab4f7c5d62d6fd7186522eead42';
 const API_BASE_URL = 'https://v3.football.api-sports.io';
@@ -60,7 +62,7 @@ function RankingBox({ titulo, dados, destaque = false, cor = "red", tipo = "none
         {titulo}
       </h5>
       <ul className="space-y-4">
-        {dados.map((jog, index) => {
+        {(dados || []).map((jog, index) => {
           const isHot = tipo === 'chute' && parseFloat(jog.valor) >= 1.5;
           const linhaSegura = isHot ? calcularLinhaSegura(jog.valor, 'chute') : null;
 
@@ -291,13 +293,20 @@ const Scouts = ({ onBack }: { onBack: () => void }) => {
          )}
 
          {!loading && step === 'country' && (
-           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 animate-in slide-in-from-bottom-10">
-              {Object.entries(DATABASE).map(([name, data]) => (
-                <button key={name} onClick={() => handleCountrySelection(name, data)} className="glass-gold p-8 rounded-[2.5rem] flex flex-col items-center gap-4 active:scale-95 border-b-2 border-white/5 group hover:border-[#D9A520]/40 transition-all">
-                   <div className="w-16 h-16 flex items-center justify-center p-1"><img src={data.flag} className="w-full h-full object-contain rounded-lg shadow-xl" alt={name} /></div>
-                   <span className="text-[10px] font-black uppercase text-gray-400 group-hover:gold-text text-center tracking-widest">{name}</span>
-                </button>
-              ))}
+           <div className="space-y-8">
+             <div className="flex justify-end">
+               <button onClick={() => setStep('partidas_do_dia')} className="bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 px-6 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-[#D4AF37]/20 transition-colors flex items-center gap-2">
+                 <Calendar size={16} /> Partidas do Dia
+               </button>
+             </div>
+             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 animate-in slide-in-from-bottom-10">
+                {Object.entries(DATABASE).map(([name, data]) => (
+                  <button key={name} onClick={() => handleCountrySelection(name, data)} className="glass-gold p-8 rounded-[2.5rem] flex flex-col items-center gap-4 active:scale-95 border-b-2 border-white/5 group hover:border-[#D9A520]/40 transition-all">
+                     <div className="w-16 h-16 flex items-center justify-center p-1"><img src={data.flag} className="w-full h-full object-contain rounded-lg shadow-xl" alt={name} /></div>
+                     <span className="text-[10px] font-black uppercase text-gray-400 group-hover:gold-text text-center tracking-widest">{name}</span>
+                  </button>
+                ))}
+             </div>
            </div>
          )}
 
@@ -456,6 +465,19 @@ const Scouts = ({ onBack }: { onBack: () => void }) => {
                   );
                 })}
               </div>
+            </div>
+         )}
+
+         {!loading && step === 'partidas_do_dia' && (
+            <div className="space-y-6 animate-in fade-in duration-700 pb-40">
+              <div className="flex justify-between items-center mb-8">
+                <button onClick={() => setStep('country')} className="flex items-center gap-2 text-[10px] font-black uppercase gold-text hover:text-white transition-colors">
+                  <ChevronLeft size={16} /> Voltar aos Países
+                </button>
+                <h2 className="text-3xl font-black italic gold-text uppercase text-center">Partidas do Dia</h2>
+                <div className="w-24"></div> {/* Spacer for centering */}
+              </div>
+              <PartidasDoDia />
             </div>
          )}
 

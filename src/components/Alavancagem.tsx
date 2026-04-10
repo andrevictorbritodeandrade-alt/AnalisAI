@@ -169,7 +169,7 @@ const Alavancagem = () => {
     let lastHouseWins: any[] = [];
 
     for (let i = 0; i < 31; i++) {
-      const d = mData.days[i];
+      const d = (mData.days && mData.days[i]) || { day: i + 1, status: 'pending', withdrawal: 0, protectCapital: false, balances: {}, bets: [] };
       const dayNum = i + 1;
       const isToday = dayNum === todayDate && curMonth === todayMonth;
       const hasBets = d.bets && d.bets.length > 0;
@@ -226,8 +226,8 @@ const Alavancagem = () => {
   }, [mData, todayDate, todayMonth, curMonth]);
 
   const stats = useMemo(() => ({
-    totalW: mData.days.reduce((a: number, d: any) => a + (d.withdrawal || 0), 0),
-    proj: calcDays[30].ret
+    totalW: (mData.days || []).reduce((a: number, d: any) => a + (d.withdrawal || 0), 0),
+    proj: calcDays[30]?.ret || 0
   }), [mData, calcDays]);
 
   const generateMonthlyReport = () => {
@@ -238,7 +238,7 @@ const Alavancagem = () => {
     let totalPerda = 0;
     let totalGanho = 0;
 
-    mData.days.forEach((d: any) => {
+    (mData.days || []).forEach((d: any) => {
       // 1. Entradas (Roulette/Earnings)
       HOUSES.forEach(h => {
         const val = d.balances?.[h] || 0;
@@ -293,17 +293,20 @@ APANHADO GERAL:
   };
 
   const updDay = (idx: number, up: any) => {
-    const h = { ...history }; const ds = [...mData.days];
-    ds[idx] = { ...ds[idx], ...up };
+    const h = { ...history }; const ds = [...(mData.days || [])];
+    ds[idx] = { ...(ds[idx] || {}), ...up };
     h[monthKey] = { ...mData, days: ds };
     setHistory(h); 
     localStorage.setItem('betManagerHistory', JSON.stringify(h));
   };
 
   const updBetStatus = (dIdx: number, bIdx: number, status: string) => {
-    const b = [...mData.days[dIdx].bets];
-    b[bIdx].status = status;
-    updDay(dIdx, { bets: b });
+    const day = (mData.days && mData.days[dIdx]) || {};
+    const b = [...(day.bets || [])];
+    if (b[bIdx]) {
+      b[bIdx].status = status;
+      updDay(dIdx, { bets: b });
+    }
   };
 
   const addApril9thBet = () => {
@@ -318,7 +321,8 @@ APANHADO GERAL:
       match: 'Freiburg/Celta, Bologna/Aston, Porto/Nottingham',
       selections: 'Freiburg vs Celta: Escanteios > 6.5, Gols > 1.5; Bologna vs Aston: Escanteios > 6.5, Gols > 1.5; Porto vs Nottingham: Gols > 1.5, Escanteios > 6.5'
     };
-    const b = [...(mData.days[dIdx].bets || []), newBet];
+    const day = (mData.days && mData.days[dIdx]) || {};
+    const b = [...(day.bets || []), newBet];
     updDay(dIdx, { bets: b });
     alert("Aposta do dia 09/04 adicionada com sucesso!");
   };
@@ -337,19 +341,22 @@ APANHADO GERAL:
             // Extraindo valor para iniciar o dia
             updDay(dIdx, { manualStake: extractedData.stake || 0 });
           } else {
-            const b = [...mData.days[dIdx].bets];
-            b[bIdx] = {
-              ...b[bIdx],
-              house: house || extractedData.house || b[bIdx].house,
-              ticketNumber: extractedData.ticketNumber || '',
-              stake: extractedData.stake || b[bIdx].stake,
-              returnAmount: extractedData.returnAmount || 0,
-              odd: extractedData.odd || b[bIdx].odd,
-              profit: extractedData.profit || 0,
-              selections: extractedData.selections || '',
-              match: extractedData.selections ? extractedData.selections.substring(0, 30) + '...' : b[bIdx].match
-            };
-            updDay(dIdx, { bets: b });
+            const day = (mData.days && mData.days[dIdx]) || {};
+            const b = [...(day.bets || [])];
+            if (b[bIdx]) {
+              b[bIdx] = {
+                ...b[bIdx],
+                house: house || extractedData.house || b[bIdx].house,
+                ticketNumber: extractedData.ticketNumber || '',
+                stake: extractedData.stake || b[bIdx].stake,
+                returnAmount: extractedData.returnAmount || 0,
+                odd: extractedData.odd || b[bIdx].odd,
+                profit: extractedData.profit || 0,
+                selections: extractedData.selections || '',
+                match: extractedData.selections ? extractedData.selections.substring(0, 30) + '...' : b[bIdx].match
+              };
+              updDay(dIdx, { bets: b });
+            }
           }
         }
         setUploadingImage(null);
@@ -507,7 +514,7 @@ APANHADO GERAL:
                               <button onClick={() => { const b=d.bets||[]; updDay(i, {bets: [...b, {match:'NOVA ENTRADA', house:'Betano', odd:1.40, stake:0, status:'pending'}]}); }} className="text-[#D4AF37] hover:text-[#E2C275] flex items-center gap-1 font-black"><PlusCircle size={16} /> ADD</button>
                            </div>
                            <div className="space-y-4 max-h-[600px] overflow-y-auto no-scrollbar pr-1">
-                              {d.bets.map((bet: any, bIdx: number) => {
+                              {(d.bets || []).map((bet: any, bIdx: number) => {
                                  const isExpanded = expandedBet && expandedBet[0] === i && expandedBet[1] === bIdx;
                                  const betReturn = (bet.stake || 0) * (bet.odd || 0);
                                  const risk = getOddRisk(bet.odd || 0, bet.isMultiple);

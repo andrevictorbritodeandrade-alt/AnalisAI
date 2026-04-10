@@ -1,4 +1,4 @@
-const CACHE_NAME = 'analisai-betmanager-v1';
+const CACHE_NAME = 'analisai-betmanager-v3';
 const ASSETS = [
   '/',
   '/index.html',

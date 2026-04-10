@@ -9,8 +9,11 @@
 
 @layer base {
   h1, h2, h3, h4, h5, h6 {
-    font-family: "Permanent Marker", cursive !important;
+    font-family: "Archivo Black", sans-serif !important;
     text-transform: uppercase !important;
+    font-style: normal !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.02em !important;
   }
 
   /* Hide scrollbar for Chrome, Safari and Opera */

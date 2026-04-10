@@ -137,7 +137,12 @@ const Alavancagem = () => {
   useEffect(() => {
     const savedHistory = localStorage.getItem('betManagerHistory');
     if (savedHistory) {
-      setHistory(JSON.parse(savedHistory));
+      try {
+        setHistory(JSON.parse(savedHistory));
+      } catch (e) {
+        console.error("Error parsing history:", e);
+        localStorage.removeItem('betManagerHistory');
+      }
     } else {
       const initialDays = Array.from({ length: 31 }, (_, i) => ({
         day: i + 1, 

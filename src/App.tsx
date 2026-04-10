@@ -3,11 +3,13 @@ import {
   TrendingUp, 
   LayoutGrid,
   Calendar,
-  Key
+  Key,
+  ChevronLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Scouts from './components/Scouts';
 import BetManager from './components/BetManager';
+import PartidasDoDia from './components/PartidasDoDia';
 import { theme } from './theme';
 
 const TacticalField = ({ size = 24, className = "" }) => (
@@ -51,7 +53,7 @@ const MarketFootball = ({ size = 24, className = "" }) => (
   </div>
 );
 
-const Menu = ({ onSelect }: { onSelect: (tab: 'analisai' | 'betManager') => void }) => (
+const Menu = ({ onSelect }: { onSelect: (tab: 'analisai' | 'betManager' | 'partidas_do_dia') => void }) => (
   <div className="min-h-screen relative overflow-hidden font-sans text-white flex flex-col items-center justify-center p-6">
     {/* Background Image with Overlay - AI Generated Salvador Sepia Mix */}
     <div className="absolute inset-0 z-0">
@@ -72,25 +74,35 @@ const Menu = ({ onSelect }: { onSelect: (tab: 'analisai' | 'betManager') => void
         MÓDULOS DE ELITE
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-16 w-full px-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-10 w-full px-8">
         <button 
           onClick={() => onSelect('analisai')} 
-          className="group relative bg-[#0A0A0A]/80 border border-[#D4AF37]/40 rounded-[5rem] p-20 flex flex-col items-center active:scale-95 transition-all text-center hover:border-[#D4AF37] shadow-[0_40px_80px_rgba(0,0,0,0.9)] backdrop-blur-2xl overflow-hidden"
+          className="group relative bg-[#0A0A0A]/80 border border-[#D4AF37]/40 rounded-[3rem] p-12 flex flex-col items-center active:scale-95 transition-all text-center hover:border-[#D4AF37] shadow-[0_40px_80px_rgba(0,0,0,0.9)] backdrop-blur-2xl overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <TacticalField size={100} className="text-[#D4AF37]/50 mb-10 group-hover:scale-110 group-hover:text-[#D4AF37] transition-all duration-700" />
-          <h2 className="text-5xl font-black italic uppercase tracking-tighter">ANALISAI</h2>
-          <p className="text-[11px] text-[#D4AF37]/70 uppercase mt-6 italic font-bold tracking-[0.4em]" style={{ fontFamily: '"Archivo Black", sans-serif' }}>Scouting Inteligente</p>
+          <TacticalField size={80} className="text-[#D4AF37]/50 mb-8 group-hover:scale-110 group-hover:text-[#D4AF37] transition-all duration-700" />
+          <h2 className="text-3xl font-black italic uppercase tracking-tighter">ANALISAI</h2>
+          <p className="text-[10px] text-[#D4AF37]/70 uppercase mt-4 italic font-bold tracking-[0.4em]" style={{ fontFamily: '"Archivo Black", sans-serif' }}>Scouting Inteligente</p>
+        </button>
+
+        <button 
+          onClick={() => onSelect('partidas_do_dia')} 
+          className="group relative bg-[#0A0A0A]/80 border border-blue-500/40 rounded-[3rem] p-12 flex flex-col items-center active:scale-95 transition-all text-center hover:border-blue-500 shadow-[0_40px_80px_rgba(0,0,0,0.9)] backdrop-blur-2xl overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <Calendar size={80} className="text-blue-500/50 mb-8 group-hover:scale-110 group-hover:text-blue-500 transition-all duration-700" />
+          <h2 className="text-3xl font-black italic uppercase tracking-tighter text-blue-500">PARTIDAS</h2>
+          <p className="text-[10px] text-blue-500/70 uppercase mt-4 italic font-bold tracking-[0.4em]" style={{ fontFamily: '"Archivo Black", sans-serif' }}>Jogos de Hoje</p>
         </button>
 
         <button 
           onClick={() => onSelect('betManager')} 
-          className="group relative bg-[#0A0A0A]/80 border border-red-500/40 rounded-[5rem] p-20 flex flex-col items-center active:scale-95 transition-all text-center hover:border-red-500 shadow-[0_40px_80px_rgba(0,0,0,0.9)] backdrop-blur-2xl overflow-hidden"
+          className="group relative bg-[#0A0A0A]/80 border border-red-500/40 rounded-[3rem] p-12 flex flex-col items-center active:scale-95 transition-all text-center hover:border-red-500 shadow-[0_40px_80px_rgba(0,0,0,0.9)] backdrop-blur-2xl overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-red-500/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <MarketFootball size={100} className="mb-10 group-hover:scale-110 transition-all duration-700" />
-          <h2 className="text-5xl font-black italic uppercase tracking-tighter">Bet Manager</h2>
-          <p className="text-[11px] text-red-500/70 uppercase mt-6 italic font-bold tracking-[0.4em]" style={{ fontFamily: '"Archivo Black", sans-serif' }}>Gestão de Banca</p>
+          <MarketFootball size={80} className="mb-8 group-hover:scale-110 transition-all duration-700" />
+          <h2 className="text-3xl font-black italic uppercase tracking-tighter text-red-500">Bet Manager</h2>
+          <p className="text-[10px] text-red-500/70 uppercase mt-4 italic font-bold tracking-[0.4em]" style={{ fontFamily: '"Archivo Black", sans-serif' }}>Gestão de Banca</p>
         </button>
       </div>
     </div>
@@ -98,7 +110,7 @@ const Menu = ({ onSelect }: { onSelect: (tab: 'analisai' | 'betManager') => void
 );
 
 export default function App() {
-  const [activeApp, setActiveApp] = useState<'menu' | 'analisai' | 'betManager'>('menu');
+  const [activeApp, setActiveApp] = useState<'menu' | 'analisai' | 'betManager' | 'partidas_do_dia'>('menu');
   const [requestCount, setRequestCount] = useState(() => Number(localStorage.getItem('api_quota_final_v2') || 0));
 
   const currentFormattedDate = useMemo(() => {
@@ -165,6 +177,18 @@ export default function App() {
             exit={{ opacity: 0, x: -20 }}
           >
             <Scouts onBack={() => setActiveApp('menu')} />
+          </motion.div>
+        )}
+
+        {activeApp === 'partidas_do_dia' && (
+          <motion.div
+            key="partidas_do_dia"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="min-h-screen bg-[#050505] relative z-10 pt-10"
+          >
+            <PartidasDoDia onBack={() => setActiveApp('menu')} />
           </motion.div>
         )}
 

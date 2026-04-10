@@ -109,7 +109,14 @@ const Scouts = ({ onBack }: { onBack: () => void }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [requestCount, setRequestCount] = useState(() => Number(localStorage.getItem('api_quota_final_v2') || 0));
   const [loading, setLoading] = useState(false);
-  const [userProfile, setUserProfile] = useState(() => JSON.parse(localStorage.getItem('senior_profile_final') || 'null'));
+  const [userProfile, setUserProfile] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('senior_profile_final') || 'null');
+    } catch (e) {
+      console.error("Error parsing user profile:", e);
+      return null;
+    }
+  });
   const [selectedCountry, setSelectedCountry] = useState<any>(null);
   const [selectedTeam, setSelectedTeam] = useState<any>(null);
   const [teamsList, setTeamsList] = useState<any[]>([]);
@@ -124,7 +131,10 @@ const Scouts = ({ onBack }: { onBack: () => void }) => {
 
   // --- API FETCH ENGINE BLINDADA ---
   const fetchAPI = async (endpoint: string, params: any = {}) => {
-    if (requestCount >= 100) return null;
+    if (requestCount >= 100) {
+      alert("Cota da API atingida (100/100). O sistema não fará mais requisições hoje para evitar bloqueios.");
+      return null;
+    }
     const url = new URL(`${API_BASE_URL}/${endpoint}`);
     Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
     try {
@@ -150,7 +160,7 @@ const Scouts = ({ onBack }: { onBack: () => void }) => {
       const results = await Promise.all(teamRequests);
       
       results.forEach(res => {
-        if (res && res.length > 0) {
+        if (res && Array.isArray(res) && res.length > 0) {
           res.forEach((item: any) => {
             if (!allTeamsFound.some(t => t.id === item.team.id)) {
               allTeamsFound.push(item.team);
@@ -294,11 +304,6 @@ const Scouts = ({ onBack }: { onBack: () => void }) => {
 
          {!loading && step === 'country' && (
            <div className="space-y-8">
-             <div className="flex justify-end">
-               <button onClick={() => setStep('partidas_do_dia')} className="bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 px-6 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-[#D4AF37]/20 transition-colors flex items-center gap-2">
-                 <Calendar size={16} /> Partidas do Dia
-               </button>
-             </div>
              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 animate-in slide-in-from-bottom-10">
                 {Object.entries(DATABASE).map(([name, data]) => (
                   <button key={name} onClick={() => handleCountrySelection(name, data)} className="glass-gold p-8 rounded-[2.5rem] flex flex-col items-center gap-4 active:scale-95 border-b-2 border-white/5 group hover:border-[#D9A520]/40 transition-all">
@@ -465,19 +470,6 @@ const Scouts = ({ onBack }: { onBack: () => void }) => {
                   );
                 })}
               </div>
-            </div>
-         )}
-
-         {!loading && step === 'partidas_do_dia' && (
-            <div className="space-y-6 animate-in fade-in duration-700 pb-40">
-              <div className="flex justify-between items-center mb-8">
-                <button onClick={() => setStep('country')} className="flex items-center gap-2 text-[10px] font-black uppercase gold-text hover:text-white transition-colors">
-                  <ChevronLeft size={16} /> Voltar aos Países
-                </button>
-                <h2 className="text-3xl font-black italic gold-text uppercase text-center">Partidas do Dia</h2>
-                <div className="w-24"></div> {/* Spacer for centering */}
-              </div>
-              <PartidasDoDia />
             </div>
          )}
 

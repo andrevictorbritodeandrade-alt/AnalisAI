@@ -241,6 +241,31 @@ async function startServer() {
     res.json({ success: true });
   });
 
+  // Football API Proxy
+  app.get("/api/football/*", async (req, res) => {
+    try {
+      const endpoint = req.params[0];
+      const query = new URLSearchParams(req.query as any).toString();
+      const url = `https://v3.football.api-sports.io/${endpoint}?${query}`;
+      
+      console.log(`🌐 [PROXY] Fetching: ${url}`);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'x-apisports-key': process.env.FOOTBALL_API_KEY || "def74ab4f7c5d62d6fd7186522e1ead42",
+          'x-apisports-host': 'v3.football.api-sports.io'
+        }
+      });
+
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error("❌ [PROXY] Error:", error);
+      res.status(500).json({ error: "Erro ao buscar dados da API de Futebol" });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
